@@ -4,3 +4,8 @@ node_modules/
 !.env.example
 *.tsbuildinfo
 .gstack/
+.DS_Store
+*.log
+.vercel
+coverage/
+.eslintcache

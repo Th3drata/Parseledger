@@ -1,8 +1,25 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/screens/workspace.png">
+    <img alt="Parseledger — bank statements, verified to the cent" src="public/screens/workspace.png" width="800">
+  </picture>
+</p>
+
 # Parseledger
+
+[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)](https://www.typescriptlang.org)
 
 Bank statements (PDF + scans/photos) → accounting-ready data (CSV / Excel /
 QuickBooks-QBO / Xero), with every figure **proven** to reconcile before you
 trust it. *Verified to the cent.*
+
+## Screenshots
+
+| Review — flagged | Review — verified | Workspace |
+|---|---|---|
+| ![Review screen with flagged items](public/screens/review-flagged.png) | ![Review screen — all verified](public/screens/review-verified.png) | ![Workspace with job list](public/screens/workspace.png) |
 
 ## Run it
 
@@ -47,3 +64,9 @@ ANTHROPIC_API_KEY=... npm run gate -- <dir-of-statements>
 ```
 
 It reports the reconciliation pass-rate per file.
+
+## License
+
+[Business Source License 1.1](LICENSE) — use freely for internal purposes.
+Offering Parseledger as a hosted service to third parties requires a
+commercial license. Converts to MIT on 2030-07-20.
