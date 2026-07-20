@@ -66,76 +66,82 @@ export default async function AlternativePage({ params }: PageProps) {
 
   return (
     <>
-      <section className="mx-auto max-w-3xl px-4 py-16">
-        <p className="text-sm text-muted-foreground">Comparison</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+      <section className="mx-auto max-w-3xl px-6 py-24">
+        <p className="text-caption font-semibold uppercase text-slate">Comparison</p>
+        <h1 className="mt-3 font-serif text-heading-lg font-normal text-ink">
           A {competitor.name} alternative that proves its numbers
         </h1>
-        <p className="mt-4 text-muted-foreground">{competitor.angle}</p>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-5 text-body text-slate">{competitor.angle}</p>
+        <p className="mt-3 text-body-sm text-slate">
           {competitor.name} is a capable tool and this comparison is kept factual. The
           difference comes down to what happens after parsing.
         </p>
-        <div className="mt-6">
+        <div className="mt-8">
           <Link
             href="/app"
-            className="rounded-md bg-ink px-5 py-2.5 font-medium text-background hover:opacity-90"
+            className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
           >
             Convert a statement
           </Link>
         </div>
       </section>
 
-      <section className="border-t border-border bg-muted/40">
-        <div className="mx-auto max-w-3xl px-4 py-12">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">Side by side</h2>
-          <div className="mt-6 overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-2.5 font-medium">Feature</th>
-                  <th className="px-4 py-2.5 font-medium">Parseledger</th>
-                  <th className="px-4 py-2.5 font-medium">{competitor.name}</th>
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-3xl px-6 py-24">
+          <h2 className="font-serif text-heading font-normal text-ink">Side by side</h2>
+          <div className="mt-8 overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-iron text-left">
+                  <th className="py-3 pr-4 text-caption font-semibold uppercase text-slate">Feature</th>
+                  <th className="py-3 pr-4 text-caption font-semibold uppercase text-slate">Parseledger</th>
+                  <th className="py-3 text-caption font-semibold uppercase text-slate">{competitor.name}</th>
                 </tr>
               </thead>
               <tbody>
                 {ROWS.map((row) => (
-                  <tr key={row.feature} className="border-t border-border align-top">
-                    <td className="px-4 py-3 font-medium text-ink">{row.feature}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      <span className="mr-1.5 text-accent">✓</span>
+                  <tr key={row.feature} className="border-b border-hairline align-top">
+                    <td className="py-4 pr-4 text-body-sm font-medium text-ink">{row.feature}</td>
+                    <td className="py-4 pr-4 text-body-sm text-ink-soft">
+                      <span className="mr-1.5 inline-flex align-middle text-reconciled">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                          <path d="M2.5 7.5l3 3 6-6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
                       {row.us}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{row.them}</td>
+                    <td className="py-4 text-body-sm text-slate">{row.them}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">
+          <p className="mt-6 text-caption text-ash">
             Competitor characteristics summarised from public product pages; verify current
             details on their site.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-12">
-        <h2 className="text-xl font-semibold tracking-tight text-ink">
-          The check that makes the difference
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          This is the live verification engine. Fix the flagged row and watch it pass.
-        </p>
-        <div className="mt-5">
-          <DemoWidget />
-        </div>
-        <div className="mt-8">
-          <Link
-            href="/app"
-            className="rounded-md bg-ink px-5 py-2.5 font-medium text-background hover:opacity-90"
-          >
-            Convert a statement
-          </Link>
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-3xl px-6 py-24">
+          <h2 className="font-serif text-heading font-normal text-ink">
+            The check that makes the difference
+          </h2>
+          <p className="mt-3 text-body text-slate">
+            This is the live verification engine. Fix the flagged row and watch it pass.
+          </p>
+          <div className="mt-8">
+            <DemoWidget />
+          </div>
+          <div className="mt-10">
+            <Link
+              href="/app"
+              className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
+            >
+              Convert a statement
+            </Link>
+          </div>
         </div>
       </section>
     </>

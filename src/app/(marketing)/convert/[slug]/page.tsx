@@ -72,7 +72,6 @@ export default async function ConvertPage({ params }: PageProps) {
 
   const faq = buildFaq(bank, format);
   const siblingFormats = FORMATS.filter((f) => f.slug !== format.slug);
-  const region = bank.country === 'UK' ? 'United Kingdom' : 'Ireland';
   const hub = format.slug === 'xero' || format.slug === 'quickbooks' ? `/${format.slug}` : null;
 
   const jsonLd = {
@@ -92,103 +91,94 @@ export default async function ConvertPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="mx-auto max-w-3xl px-4 py-16">
-        <p className="text-sm text-muted-foreground">
-          {region} · {bank.name} · {format.name}
+      <section className="mx-auto max-w-3xl px-6 py-24">
+        <p className="tnum text-caption text-ash">
+          /convert/{bank.slug} → {format.slug}
         </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+        <h1 className="mt-4 font-serif text-heading-lg font-normal text-ink">
           Convert {bank.name} statements to {format.name}
         </h1>
-        <p className="mt-4 text-muted-foreground">{bank.blurb}</p>
-        <p className="mt-3 text-muted-foreground">
+        <p className="mt-5 text-body text-slate">{bank.blurb}</p>
+        <p className="mt-3 text-body text-slate">
           Parseledger turns those statements into {format.name}-ready data and proves the result
           reconciles — <span className="tnum">opening + credits − debits = closing</span>, checked
           to the cent — before you import a single row.
         </p>
-        <div className="mt-6">
+        <div className="mt-8">
           <Link
             href="/app"
-            className="rounded-md bg-ink px-5 py-2.5 font-medium text-background hover:opacity-90"
+            className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
           >
             Convert a statement
           </Link>
         </div>
+        <div className="mt-12">
+          <DemoWidget />
+        </div>
       </section>
 
-      <section className="border-t border-border bg-muted/40">
-        <div className="mx-auto max-w-3xl px-4 py-12">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">How it works</h2>
-          <ol className="mt-6 space-y-4">
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-3xl px-6 py-24">
+          <h2 className="font-serif text-heading font-normal text-ink">How it works</h2>
+          <ol className="mt-8 space-y-6">
             <li className="flex gap-4">
-              <span className="tnum mt-0.5 text-sm text-muted-foreground">1</span>
+              <span className="tnum mt-0.5 text-figure text-ash">1</span>
               <div>
-                <h3 className="font-medium text-ink">Upload</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <h3 className="text-body-lg font-medium text-ink">Upload</h3>
+                <p className="mt-1 text-body-sm text-ink-soft">
                   Drop in your {bank.name} PDF, scan or photo. Multi-page and batch uploads are
                   handled the same way.
                 </p>
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="tnum mt-0.5 text-sm text-muted-foreground">2</span>
+              <span className="tnum mt-0.5 text-figure text-ash">2</span>
               <div>
-                <h3 className="font-medium text-ink">Verified review</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <h3 className="text-body-lg font-medium text-ink">Verified review</h3>
+                <p className="mt-1 text-body-sm text-ink-soft">
                   Every figure is reconciled against the statement&apos;s own balances. Rows that
                   do not add up are flagged; you correct them in place and watch the check pass.
                 </p>
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="tnum mt-0.5 text-sm text-muted-foreground">3</span>
+              <span className="tnum mt-0.5 text-figure text-ash">3</span>
               <div>
-                <h3 className="font-medium text-ink">Export to {format.name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{format.blurb}</p>
+                <h3 className="text-body-lg font-medium text-ink">Export to {format.name}</h3>
+                <p className="mt-1 text-body-sm text-ink-soft">{format.blurb}</p>
               </div>
             </li>
           </ol>
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-12">
-        <h2 className="text-xl font-semibold tracking-tight text-ink">
-          Try the verification check
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          This is the live engine, running in your browser on a sample statement.
-        </p>
-        <div className="mt-5">
-          <DemoWidget />
-        </div>
-      </section>
-
-      <section className="border-t border-border">
-        <div className="mx-auto max-w-3xl px-4 py-12">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-3xl px-6 py-24">
+          <h2 className="font-serif text-heading font-normal text-ink">
             Frequently asked questions
           </h2>
-          <dl className="mt-6 space-y-6">
+          <dl className="mt-8 space-y-8">
             {faq.map((f) => (
               <div key={f.q}>
-                <dt className="font-medium text-ink">{f.q}</dt>
-                <dd className="mt-1.5 text-sm text-muted-foreground">{f.a}</dd>
+                <dt className="text-body-lg font-medium text-ink">{f.q}</dt>
+                <dd className="mt-2 text-body text-ink-soft">{f.a}</dd>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
-      <section className="border-t border-border bg-muted/40">
-        <div className="mx-auto max-w-3xl px-4 py-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-3xl px-6 py-16">
+          <h2 className="text-caption font-semibold uppercase text-slate">
             Also for {bank.name}
           </h2>
-          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
             {siblingFormats.map((f) => (
               <li key={f.slug}>
                 <Link
                   href={`/convert/${convertSlug(bank, f)}`}
-                  className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  className="text-body-sm text-slate underline underline-offset-2 hover:text-ink"
                 >
                   {bank.name} statements to {f.name}
                 </Link>
@@ -198,7 +188,7 @@ export default async function ConvertPage({ params }: PageProps) {
               <li>
                 <Link
                   href={hub}
-                  className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  className="text-body-sm text-slate underline underline-offset-2 hover:text-ink"
                 >
                   All banks to {format.name}
                 </Link>

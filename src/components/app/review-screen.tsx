@@ -7,7 +7,8 @@ import { reconcileStatement } from '@/verification';
 import { parseMoneyToMinor, formatMinor } from '@/money';
 import { formatDate } from '@/lib/format';
 import { EXPORT_FORMATS } from '@/export';
-import { VerificationBanner } from './verification-banner';
+import { ReconciliationBar } from './reconciliation-bar';
+import { VerifiedBadge } from './verified-badge';
 
 type ExportFormat = (typeof EXPORT_FORMATS)[number];
 
@@ -23,7 +24,7 @@ interface EditableCellProps {
   editValue: string;
   align: 'left' | 'right';
   mono?: boolean;
-  tone?: 'default' | 'danger';
+  tone?: 'default' | 'credit' | 'flag';
   onCommit: (raw: string) => void;
 }
 
@@ -41,9 +42,9 @@ function EditableCell({ display, editValue, align, mono, tone, onCommit }: Edita
     if (draft !== editValue) onCommit(draft);
   };
 
-  const base = `${align === 'right' ? 'text-right' : 'text-left'} ${mono ? 'tnum' : ''} ${
-    tone === 'danger' ? 'text-danger' : ''
-  }`;
+  const toneClass =
+    tone === 'flag' ? 'text-flag' : tone === 'credit' ? 'text-reconciled' : 'text-ink';
+  const base = `${align === 'right' ? 'text-right' : 'text-left'} ${mono ? 'tnum' : ''} ${toneClass}`;
 
   if (editing) {
     return (
@@ -56,7 +57,7 @@ function EditableCell({ display, editValue, align, mono, tone, onCommit }: Edita
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') setEditing(false);
         }}
-        className={`w-full rounded border border-accent bg-card px-1.5 py-0.5 outline-none ${base}`}
+        className={`w-full rounded-inputs bg-paper px-1.5 py-0.5 outline-none ring-1 ring-iron ${base}`}
       />
     );
   }
@@ -68,7 +69,7 @@ function EditableCell({ display, editValue, align, mono, tone, onCommit }: Edita
         setDraft(editValue);
         setEditing(true);
       }}
-      className={`w-full cursor-text rounded px-1.5 py-0.5 hover:bg-muted ${base}`}
+      className={`w-full cursor-text rounded-tags px-1.5 py-0.5 hover:bg-mist ${base}`}
     >
       {display}
     </button>
@@ -166,39 +167,52 @@ export function ReviewScreen({
     [jobId, save, statement],
   );
 
+  const issueCount = result.issues.length;
+
   return (
-    <div className="space-y-6">
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-xl font-semibold tracking-tight text-ink">{statement.bankName}</h1>
-          <span className="text-sm text-muted-foreground">
+    <div className="space-y-8">
+      <header className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-subheading font-semibold text-ink">{statement.bankName}</h1>
+            {result.verified ? (
+              <VerifiedBadge state="reconciled" label="Verified to the cent" />
+            ) : (
+              <VerifiedBadge
+                state="flag"
+                label={issueCount === 1 ? '1 issue — doesn’t balance' : `${issueCount} issues — doesn’t balance`}
+              />
+            )}
+          </div>
+          <span className="text-body-sm text-slate">
             {statement.accountHolder ?? 'Account'}
-            {statement.accountNumber ? ` · ${statement.accountNumber}` : ''}
+            {statement.accountNumber ? (
+              <>
+                {' · '}
+                <span className="tnum">{statement.accountNumber}</span>
+              </>
+            ) : null}
           </span>
         </div>
-        <div className="flex flex-wrap gap-x-8 gap-y-1 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-x-8 gap-y-1 text-body-sm text-slate">
           <span>
-            Period: {formatDate(statement.periodStart)} → {formatDate(statement.periodEnd)}
-          </span>
-          <span>
-            Opening <span className="tnum text-foreground">{formatMinor(statement.openingBalanceMinor, currency)}</span>
-            {' → '}
-            Closing <span className="tnum text-foreground">{formatMinor(statement.closingBalanceMinor, currency)}</span>
+            Period <span className="tnum text-ink-soft">{formatDate(statement.periodStart)}</span> →{' '}
+            <span className="tnum text-ink-soft">{formatDate(statement.periodEnd)}</span>
           </span>
         </div>
       </header>
 
-      <VerificationBanner result={result} />
+      <ReconciliationBar statement={statement} result={result} />
 
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-body-sm">
           <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="w-8 px-2 py-2.5" />
-              <th className="px-3 py-2.5 text-left font-medium">Date</th>
-              <th className="px-3 py-2.5 text-left font-medium">Description</th>
-              <th className="px-3 py-2.5 text-right font-medium">Amount</th>
-              <th className="px-3 py-2.5 text-right font-medium">Balance</th>
+            <tr className="border-b border-iron text-left">
+              <th className="w-7 pb-2" />
+              <th className="px-3 pb-2 text-caption font-semibold uppercase tracking-wide text-slate">Date</th>
+              <th className="px-3 pb-2 text-caption font-semibold uppercase tracking-wide text-slate">Description</th>
+              <th className="px-3 pb-2 text-right text-caption font-semibold uppercase tracking-wide text-slate">Amount</th>
+              <th className="px-3 pb-2 text-right text-caption font-semibold uppercase tracking-wide text-slate">Balance</th>
             </tr>
           </thead>
           <tbody>
@@ -207,15 +221,15 @@ export function ReviewScreen({
               return (
                 <tr
                   key={i}
-                  className={`border-b border-border last:border-0 ${isFlagged ? 'bg-danger-soft' : ''}`}
+                  className={`border-b border-hairline ${
+                    isFlagged ? 'border-l-2 border-l-flag bg-flag-wash' : 'odd:bg-paper even:bg-ledger'
+                  }`}
                 >
-                  <td className="px-2 py-1 text-center text-danger" aria-hidden>
+                  <td className="px-2 py-1.5 text-center text-flag" aria-hidden>
                     {isFlagged ? '⚑' : ''}
                   </td>
-                  <td className="px-3 py-1 tnum text-muted-foreground whitespace-nowrap">
-                    {formatDate(tx.date)}
-                  </td>
-                  <td className="px-3 py-1">
+                  <td className="tnum whitespace-nowrap px-3 py-1.5 text-slate">{formatDate(tx.date)}</td>
+                  <td className="px-3 py-1.5">
                     <EditableCell
                       display={tx.description}
                       editValue={tx.description}
@@ -223,17 +237,17 @@ export function ReviewScreen({
                       onCommit={(raw) => editTransaction(i, { description: raw })}
                     />
                   </td>
-                  <td className="px-3 py-1">
+                  <td className="px-3 py-1.5">
                     <EditableCell
                       display={formatMinor(tx.amountMinor, currency)}
                       editValue={minorToInput(tx.amountMinor)}
                       align="right"
                       mono
-                      tone={tx.amountMinor < 0 ? 'danger' : 'default'}
+                      tone={isFlagged ? 'flag' : tx.amountMinor >= 0 ? 'credit' : 'default'}
                       onCommit={(raw) => onAmountEdit(i, raw)}
                     />
                   </td>
-                  <td className="px-3 py-1">
+                  <td className="px-3 py-1.5">
                     <EditableCell
                       display={tx.balanceMinor === null ? '—' : formatMinor(tx.balanceMinor, currency)}
                       editValue={tx.balanceMinor === null ? '' : minorToInput(tx.balanceMinor)}
@@ -249,16 +263,16 @@ export function ReviewScreen({
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
+      <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-5">
         {result.verified ? (
           <>
-            <span className="text-sm text-muted-foreground">Export:</span>
+            <span className="text-body-sm text-slate">Export</span>
             {EXPORT_FORMATS.map((format) => (
               <button
                 key={format.id}
                 type="button"
                 onClick={() => void download(format, false)}
-                className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                className="rounded-buttons border border-hairline bg-transparent px-4 py-2 text-[15px] font-medium text-ink transition-colors hover:bg-ledger"
               >
                 {format.label}
               </button>
@@ -268,13 +282,13 @@ export function ReviewScreen({
           <button
             type="button"
             onClick={() => setConfirmingUnverified(true)}
-            className="rounded-md border border-danger/40 bg-danger-soft px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:border-danger"
+            className="rounded-buttons border border-hairline px-4 py-2 text-[15px] font-medium text-flag transition-colors hover:bg-flag-wash"
           >
             Export anyway (unverified)
           </button>
         ) : (
           <>
-            <span className="text-sm text-danger">
+            <span className="text-body-sm text-flag">
               This statement does not reconcile. Export unverified as:
             </span>
             {EXPORT_FORMATS.map((format) => (
@@ -282,7 +296,7 @@ export function ReviewScreen({
                 key={format.id}
                 type="button"
                 onClick={() => void download(format, true)}
-                className="rounded-md border border-danger/40 bg-danger-soft px-3 py-1.5 text-sm font-medium text-danger transition-colors hover:border-danger"
+                className="rounded-buttons border border-hairline bg-flag-wash px-4 py-2 text-[15px] font-medium text-flag transition-colors hover:border-flag"
               >
                 {format.label}
               </button>
@@ -290,7 +304,7 @@ export function ReviewScreen({
             <button
               type="button"
               onClick={() => setConfirmingUnverified(false)}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-body-sm text-slate hover:text-ink"
             >
               Cancel
             </button>

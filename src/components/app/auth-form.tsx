@@ -42,7 +42,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     <form onSubmit={onSubmit} className="space-y-4">
       {isSignup && (
         <div className="space-y-1.5">
-          <label htmlFor="name" className="block text-sm font-medium text-ink">
+          <label htmlFor="name" className="block text-body-sm font-medium text-ink">
             Name
           </label>
           <input
@@ -51,12 +51,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+            className="w-full rounded-inputs bg-ledger px-3 py-2.5 text-body-sm text-ink outline-none placeholder:text-ash focus:bg-paper focus:ring-1 focus:ring-iron"
           />
         </div>
       )}
       <div className="space-y-1.5">
-        <label htmlFor="email" className="block text-sm font-medium text-ink">
+        <label htmlFor="email" className="block text-body-sm font-medium text-ink">
           Email
         </label>
         <input
@@ -66,11 +66,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+          className="w-full rounded-inputs bg-ledger px-3 py-2.5 text-body-sm text-ink outline-none placeholder:text-ash focus:bg-paper focus:ring-1 focus:ring-iron"
         />
       </div>
       <div className="space-y-1.5">
-        <label htmlFor="password" className="block text-sm font-medium text-ink">
+        <label htmlFor="password" className="block text-body-sm font-medium text-ink">
           Password
         </label>
         <input
@@ -81,32 +81,32 @@ export function AuthForm({ mode }: { mode: Mode }) {
           autoComplete={isSignup ? 'new-password' : 'current-password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+          className="w-full rounded-inputs bg-ledger px-3 py-2.5 text-body-sm text-ink outline-none placeholder:text-ash focus:bg-paper focus:ring-1 focus:ring-iron"
         />
       </div>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-flag">{error}</p>}
 
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-md bg-ink px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="w-full rounded-buttons bg-ink px-4 py-2.5 text-body-sm font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-60"
       >
         {busy ? 'Please wait…' : isSignup ? 'Create account' : 'Sign in'}
       </button>
 
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body-sm text-slate">
         {isSignup ? (
           <>
             Already have an account?{' '}
-            <Link href="/signin" className="text-ink hover:underline">
+            <Link href="/signin" className="text-slate underline hover:text-ink">
               Sign in
             </Link>
           </>
         ) : (
           <>
             No account yet?{' '}
-            <Link href="/signup" className="text-ink hover:underline">
+            <Link href="/signup" className="text-slate underline hover:text-ink">
               Create one
             </Link>
           </>

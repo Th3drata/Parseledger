@@ -10,8 +10,8 @@ export default function SignInPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Sign in</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-heading-sm font-semibold tracking-tight text-ink">Sign in</h1>
+        <p className="text-body-sm text-slate">
           Access your statements and exports.
         </p>
       </div>

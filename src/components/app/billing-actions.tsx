@@ -59,7 +59,7 @@ export function BillingActions({
               type="button"
               disabled={busy}
               onClick={() => void checkout(opt)}
-              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
+              className="rounded-buttons bg-ink px-4 py-2.5 text-body-sm font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-60"
             >
               {opt.label}
             </button>
@@ -73,7 +73,7 @@ export function BillingActions({
             type="button"
             disabled={busy}
             onClick={() => void checkout(paygOption)}
-            className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
+            className="rounded-buttons border border-hairline px-4 py-2.5 text-body-sm font-medium text-ink transition-colors hover:bg-ledger disabled:opacity-60"
           >
             {paygOption.label}
           </button>
@@ -83,7 +83,7 @@ export function BillingActions({
             type="button"
             disabled={busy}
             onClick={() => void portal()}
-            className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60"
+            className="rounded-buttons border border-hairline px-4 py-2.5 text-body-sm font-medium text-slate transition-colors hover:bg-ledger hover:text-ink disabled:opacity-60"
           >
             Manage billing
           </button>

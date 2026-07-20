@@ -36,8 +36,8 @@ export default async function AccountPage() {
   if (!billingEnabled()) {
     return (
       <div className="space-y-4">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Account</h1>
-        <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+        <h1 className="text-heading-sm font-semibold tracking-tight text-ink">Account</h1>
+        <div className="rounded-cards border border-hairline bg-ledger p-4 text-body-sm text-slate">
           Running in local mode — billing is disabled. Conversions are unlimited and
           nothing is charged.
         </div>
@@ -59,33 +59,30 @@ export default async function AccountPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-1.5">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Account</h1>
-        <p className="text-sm text-muted-foreground">
-          Current plan: <span className="font-medium text-ink">{PLANS[sub.tier].name}</span>
+        <h1 className="text-heading-sm font-semibold tracking-tight text-ink">Account</h1>
+        <p className="text-body-sm text-slate">
+          Current plan: <span className="font-semibold text-ink">{PLANS[sub.tier].name}</span>
         </p>
       </div>
 
-      <section className="space-y-3 rounded-lg border border-border bg-card p-5">
+      <section className="space-y-3 border-t border-hairline pt-6">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold text-ink">Pages this month</h2>
-          <span className="tnum text-sm text-muted-foreground">
+          <h2 className="text-body-sm font-semibold text-ink">Pages this month</h2>
+          <span className="tnum text-body-sm text-slate">
             {used} / {limit}
           </span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={`h-full rounded-full ${pct >= 100 ? 'bg-danger' : 'bg-accent'}`}
-            style={{ width: `${pct}%` }}
-          />
+        <div className="h-1 w-full overflow-hidden rounded-full bg-mist">
+          <div className="h-full rounded-full bg-ink" style={{ width: `${pct}%` }} />
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body-sm text-slate">
           Pay-as-you-go balance:{' '}
           <span className="tnum font-medium text-ink">{sub.paygPagesBalance}</span> pages
         </p>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold text-ink">Change plan</h2>
+      <section className="space-y-4 border-t border-hairline pt-6">
+        <h2 className="text-body-sm font-semibold text-ink">Change plan</h2>
         <BillingActions
           options={upgradeOptions(sub.tier)}
           paygOption={paygOption}

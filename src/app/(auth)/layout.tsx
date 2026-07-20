@@ -2,10 +2,10 @@ import Link from 'next/link';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex h-14 max-w-5xl items-center px-6">
-          <Link href="/" className="text-sm font-semibold tracking-tight text-ink">
+    <div className="flex min-h-screen flex-col bg-paper">
+      <header className="border-b border-hairline bg-paper">
+        <div className="mx-auto flex h-16 max-w-[1360px] items-center px-6">
+          <Link href="/" className="text-body-lg font-semibold tracking-tight text-ink">
             Parseledger
           </Link>
         </div>

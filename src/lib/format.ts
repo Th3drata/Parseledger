@@ -36,16 +36,19 @@ export interface StatusChipStyle {
 export function statusChipStyle(status: JobStatus, verified: boolean | null): StatusChipStyle {
   switch (status) {
     case 'processing':
-      return { label: 'Processing', className: 'bg-muted text-muted-foreground' };
+      return { label: 'Processing', className: 'bg-mist text-slate' };
     case 'review':
+      // Verified/needs-review ARE engine verification states — colour is earned here.
       return verified
-        ? { label: 'Verified', className: 'bg-accent-soft text-accent' }
-        : { label: 'Needs review', className: 'bg-danger-soft text-danger' };
+        ? { label: 'Verified', className: 'bg-reconciled-wash text-reconciled' }
+        : { label: 'Needs review', className: 'bg-caution-wash text-caution' };
     case 'exported':
-      return { label: 'Exported', className: 'bg-accent-soft text-accent' };
+      // A neutral outcome, not a live verification state — keep it achromatic.
+      return { label: 'Exported', className: 'bg-mist text-ink-soft' };
     case 'failed':
-      return { label: 'Failed', className: 'bg-danger-soft text-danger' };
+      // A genuinely broken state earns the flag hue.
+      return { label: 'Failed', className: 'bg-flag-wash text-flag' };
     default:
-      return { label: status, className: 'bg-muted text-muted-foreground' };
+      return { label: status, className: 'bg-mist text-slate' };
   }
 }

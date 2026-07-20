@@ -103,46 +103,50 @@ const FEATURE_ROWS: { label: string; key: keyof Tier['features'] }[] = [
 
 export default function PricingPage() {
   return (
-    <section className="mx-auto max-w-5xl px-4 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight text-ink">Pricing</h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">
+    <section className="mx-auto max-w-[1200px] px-6 py-24">
+      <h1 className="font-serif text-heading-lg font-normal text-ink">Pricing</h1>
+      <p className="mt-4 max-w-2xl text-body text-slate">
         Flat monthly plans. Every tier runs the same verification engine — the difference is
         volume, seats and workflow, never accuracy.
       </p>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {TIERS.map((tier) => (
           <div
             key={tier.name}
-            className={`flex flex-col rounded-lg border bg-card p-6 ${
-              tier.highlighted ? 'border-accent shadow-sm' : 'border-border'
+            className={`flex flex-col rounded-cards bg-paper p-8 ${
+              tier.highlighted ? 'border border-ink' : 'border border-hairline'
             }`}
           >
             {tier.highlighted && (
-              <span className="mb-3 inline-block self-start rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
-                Most practices choose Pro
+              <span className="mb-4 inline-block self-start rounded-full bg-ink px-2.5 py-0.5 text-caption font-medium text-paper">
+                Most popular
               </span>
             )}
-            <h2 className="text-lg font-semibold text-ink">{tier.name}</h2>
-            <p className="tnum mt-1 text-2xl font-semibold text-ink">{tier.monthly}</p>
+            <h2 className="text-body-sm font-semibold uppercase text-slate">{tier.name}</h2>
+            <p className="mt-2 flex items-baseline gap-1">
+              <span className="tnum text-figure-lg font-medium text-ink">{tier.monthly}</span>
+            </p>
             {tier.annualNote && (
-              <p className="mt-0.5 text-xs text-muted-foreground">{tier.annualNote}</p>
+              <p className="mt-1 text-caption text-slate">{tier.annualNote}</p>
             )}
-            <p className="mt-3 text-sm text-muted-foreground">{tier.tagline}</p>
-            <ul className="mt-4 flex-1 space-y-1.5 text-sm">
+            <p className="mt-4 text-body-sm text-ink-soft">{tier.tagline}</p>
+            <ul className="mt-6 flex-1 space-y-3">
               {FEATURE_ROWS.map((row) => (
-                <li key={row.key} className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="text-right text-ink">{tier.features[row.key]}</span>
+                <li key={row.key} className="flex items-start gap-2.5">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="mt-0.5 shrink-0 text-slate">
+                    <path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-body-sm text-ink-soft">{tier.features[row.key]}</span>
                 </li>
               ))}
             </ul>
             <Link
               href="/app"
-              className={`mt-6 rounded-md px-4 py-2 text-center text-sm font-medium ${
+              className={`mt-8 rounded-buttons px-4 py-2 text-center text-body-sm font-medium ${
                 tier.highlighted
-                  ? 'bg-ink text-background hover:opacity-90'
-                  : 'border border-border text-ink hover:border-muted-foreground'
+                  ? 'bg-ink text-paper hover:bg-ink-soft'
+                  : 'border border-hairline text-ink hover:bg-ledger'
               }`}
             >
               Convert a statement
@@ -151,14 +155,14 @@ export default function PricingPage() {
         ))}
       </div>
 
-      <div className="mt-8 rounded-lg border border-border bg-muted/40 p-5 text-sm">
-        <p className="text-ink">
+      <div className="mt-10 rounded-cards border border-hairline bg-ledger p-6">
+        <p className="text-body-sm text-ink">
           <span className="font-medium">Pay as you go:</span> $9 per 100 pages, on any tier,
           including Free. Purchased pages never expire.
         </p>
       </div>
 
-      <p className="mt-8 text-xs text-muted-foreground">
+      <p className="mt-8 text-body-sm text-ash">
         All prices in USD, exclusive of VAT where applicable. Cancel any time; your exported
         files remain yours.
       </p>

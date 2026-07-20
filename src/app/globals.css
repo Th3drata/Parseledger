@@ -1,46 +1,89 @@
 @import "tailwindcss";
 
-/* Parseledger design tokens — achromatic, trust-forward.
-   One accent only: verification green, earned by reconciliation. */
-:root {
-  --background: oklch(0.985 0.002 90);
-  --foreground: oklch(0.185 0.005 90);
-  --muted: oklch(0.955 0.003 90);
-  --muted-foreground: oklch(0.45 0.006 90);
-  --border: oklch(0.90 0.004 90);
-  --card: oklch(1 0 0);
-  --accent: oklch(0.52 0.14 155);        /* verified green */
-  --accent-soft: oklch(0.96 0.03 155);
-  --danger: oklch(0.55 0.19 27);
-  --danger-soft: oklch(0.965 0.025 27);
-  --ink: oklch(0.145 0.005 90);
-}
+/* Parseledger — "proof on paper" (DESIGN_1).
+   Ink + grays carry the whole interface. The three signal hues are the
+   rendered output of reconcileStatement() and are NEVER decoration. */
+@theme {
+  /* Colors */
+  --color-ink: #0b0f19;
+  --color-ink-soft: #1c2331;
+  --color-paper: #ffffff;
+  --color-ledger: #f6f7f9;
+  --color-mist: #eef0f4;
+  --color-hairline: #e2e5ea;
+  --color-iron: #ccd1da;
+  --color-slate: #5b6472;
+  --color-ash: #9aa2b1;
+  --color-reconciled: #0b6b43;
+  --color-reconciled-wash: #e7f4ec;
+  --color-flag: #bf2d25;
+  --color-flag-wash: #fbeceb;
+  --color-caution: #8a5e00;
+  --color-caution-wash: #fbf3e0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-card: var(--card);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --color-danger: var(--danger);
-  --color-danger-soft: var(--danger-soft);
-  --color-ink: var(--ink);
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
+  /* Typography */
+  --font-serif: var(--font-source-serif), 'Tiempos Headline', ui-serif, Georgia, serif;
+  --font-sans: var(--font-inter), 'Söhne', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale */
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.2px;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--letter-spacing: -0.06px;
+  --text-body: 16px;
+  --text-body--line-height: 1.6;
+  --text-body--letter-spacing: -0.08px;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.6;
+  --text-body-lg--letter-spacing: -0.09px;
+  --text-figure: 16px;
+  --text-figure--line-height: 1.3;
+  --text-figure--letter-spacing: -0.16px;
+  --text-figure-lg: 28px;
+  --text-figure-lg--line-height: 1.2;
+  --text-figure-lg--letter-spacing: -0.28px;
+  --text-subheading: 22px;
+  --text-subheading--line-height: 1.3;
+  --text-subheading--letter-spacing: -0.22px;
+  --text-heading-sm: 28px;
+  --text-heading-sm--line-height: 1.2;
+  --text-heading-sm--letter-spacing: -0.5px;
+  --text-heading: 36px;
+  --text-heading--line-height: 1.15;
+  --text-heading--letter-spacing: -0.8px;
+  --text-heading-lg: 48px;
+  --text-heading-lg--line-height: 1.08;
+  --text-heading-lg--letter-spacing: -1.2px;
+  --text-display: 64px;
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -1.8px;
+
+  /* Radius */
+  --radius-tags: 6px;
+  --radius-buttons: 8px;
+  --radius-inputs: 8px;
+  --radius-cards: 12px;
+
+  /* Shadows — only true overlays may use these; cards and buttons never lift */
+  --shadow-artifact: 0 0 0 1px #e2e5ea, 0 12px 32px -12px rgba(11, 15, 25, 0.12);
+  --shadow-popover: 0 0 0 1px #e2e5ea, 0 8px 24px -8px rgba(11, 15, 25, 0.16);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" on, "ss01" on, "cv11" on;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Money and figures are always tabular */
-.tnum {
+/* Every monetary amount, balance, date and equation — tabular mono, always. */
+.tnum,
+[data-figure] {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" on, "zero" on;
   font-variant-numeric: tabular-nums;
-  font-family: var(--font-mono), ui-monospace, monospace;
 }

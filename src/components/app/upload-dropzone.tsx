@@ -67,14 +67,31 @@ export function UploadDropzone({ demoMode }: { demoMode: boolean }) {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         disabled={busy}
-        className={`flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
-          dragging ? 'border-accent bg-accent-soft' : 'border-border bg-card hover:border-muted-foreground/40'
+        className={`flex w-full flex-col items-center justify-center gap-3 rounded-cards border border-dashed px-6 py-16 text-center transition-colors ${
+          dragging ? 'border-solid border-ink bg-paper' : 'border-iron bg-ledger'
         } ${busy ? 'cursor-wait opacity-70' : 'cursor-pointer'}`}
       >
-        <span className="text-base font-medium text-ink">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 32 32"
+          fill="none"
+          aria-hidden
+          className={dragging ? 'text-ink' : 'text-slate'}
+        >
+          <path
+            d="M9 4h9l5 5v19H9V4z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path d="M18 4v5h5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M13 17h6M13 21h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <span className="text-body font-medium text-ink">
           {busy ? 'Reading statement…' : 'Drop a bank statement — PDF or photo'}
         </span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-body-sm text-slate">
           {busy ? 'This can take a moment.' : 'or click to choose a file · PDF, PNG, JPG, WebP · up to 20MB'}
         </span>
       </button>
@@ -90,7 +107,7 @@ export function UploadDropzone({ demoMode }: { demoMode: boolean }) {
         }}
       />
       {demoMode && (
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-body-sm text-slate">
           Demo mode — uploads load a sample statement.
         </p>
       )}

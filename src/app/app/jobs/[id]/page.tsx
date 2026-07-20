@@ -16,9 +16,9 @@ export default async function JobReviewPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-4">
         <BackLink />
-        <div className="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3">
-          <p className="text-sm font-semibold text-danger">Extraction failed</p>
-          <p className="mt-1 text-sm text-danger">{job.error ?? 'Unknown error.'}</p>
+        <div className="rounded-cards border border-hairline bg-ledger px-4 py-3">
+          <p className="text-body-sm font-semibold text-ink">Extraction failed</p>
+          <p className="mt-1 text-body-sm text-slate">{job.error ?? 'Unknown error.'}</p>
         </div>
       </div>
     );
@@ -28,7 +28,7 @@ export default async function JobReviewPage({ params }: { params: Promise<{ id: 
     return (
       <div className="space-y-4">
         <BackLink />
-        <p className="text-sm text-muted-foreground">Processing this statement…</p>
+        <p className="text-body-sm text-slate">Processing this statement…</p>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default async function JobReviewPage({ params }: { params: Promise<{ id: 
 
 function BackLink() {
   return (
-    <Link href="/app" className="text-sm text-muted-foreground hover:text-foreground">
+    <Link href="/app" className="text-body-sm text-slate hover:text-ink">
       ← All jobs
     </Link>
   );

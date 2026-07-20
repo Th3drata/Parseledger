@@ -19,7 +19,7 @@ export function SignOutButton() {
           router.refresh();
         });
       }}
-      className="transition-colors hover:text-foreground disabled:opacity-60"
+      className="rounded-buttons border border-hairline px-3 py-1.5 text-body-sm text-slate transition-colors hover:bg-ledger hover:text-ink disabled:opacity-60"
     >
       Sign out
     </button>
