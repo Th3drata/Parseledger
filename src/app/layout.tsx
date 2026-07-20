@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   title: { default: 'Parseledger — bank statements to clean data, verified to the cent', template: '%s · Parseledger' },
   description:
     'Convert bank statement PDFs and scans into accounting-ready CSV, Excel, QuickBooks and Xero files — with every figure proven to reconcile.',
+  openGraph: {
+    siteName: 'Parseledger',
+    images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Parseledger — verified to the cent' }],
+  },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
