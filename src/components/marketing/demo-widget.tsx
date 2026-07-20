@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ExtractedStatement } from '@/types';
 import { demoStatementWithError } from '@/lib/demo';
 import { reconcileStatement } from '@/verification';
 import { formatMinor, parseMoneyToMinor } from '@/money';
 import { VerifiedBadge } from '@/components/app/verified-badge';
+import { gsap, useGSAP } from '@/animations/gsap';
 
 /**
  * The conversion mechanism: a live mini review-table running the real
@@ -18,9 +19,33 @@ export function DemoWidget() {
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
   const [parseError, setParseError] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const result = useMemo(() => reconcileStatement(stmt), [stmt]);
   const flagged = new Set(result.flaggedRows);
+
+  // Signature moment: the statement prints itself. On scroll-in, ledger rows
+  // stagger in like a statement rendering line by line, then the equation
+  // strip and footer settle. Runs once; reduced-motion safe.
+  useGSAP(
+    () => {
+      const root = rootRef.current;
+      if (!root) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const rows = root.querySelectorAll('tbody tr');
+      const chrome = root.querySelectorAll('[data-print-after]');
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: root, start: 'top 85%', once: true },
+        defaults: { ease: 'power2.out' },
+      });
+      tl.from(rows, { opacity: 0, y: 8, duration: 0.45, stagger: 0.055 }).from(
+        chrome,
+        { opacity: 0, duration: 0.6 },
+        '-=0.15',
+      );
+    },
+    { scope: rootRef },
+  );
 
   const computedClosing =
     stmt.openingBalanceMinor + result.sumCreditsMinor - result.sumDebitsMinor;
@@ -59,25 +84,33 @@ export function DemoWidget() {
   }
 
   return (
-    <div className="overflow-hidden rounded-cards bg-paper shadow-artifact">
+    <div ref={rootRef} className="overflow-hidden rounded-cards bg-paper shadow-artifact">
       {/* Header — statement identity + verification badge */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-4">
+      <div
+        data-print-after
+        className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-4"
+      >
         <div className="tnum text-caption text-slate">
           {stmt.bankName} · {stmt.accountNumber} · {stmt.periodStart} to {stmt.periodEnd}
         </div>
         {result.verified ? (
-          <VerifiedBadge state="reconciled" label="Verified to the cent" />
+          <span key="verified" className="badge-in">
+            <VerifiedBadge state="reconciled" label="Verified to the cent" />
+          </span>
         ) : (
-          <VerifiedBadge
-            state="flag"
-            label={`${result.issues.length} issue${result.issues.length === 1 ? '' : 's'} found`}
-          />
+          <span key="flagged" className="badge-in">
+            <VerifiedBadge
+              state="flag"
+              label={`${result.issues.length} issue${result.issues.length === 1 ? '' : 's'} found`}
+            />
+          </span>
         )}
       </div>
 
       {/* Reconciliation equation strip */}
       <div
-        className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline px-5 py-3 ${
+        data-print-after
+        className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-hairline px-5 py-3 transition-colors duration-700 ${
           result.verified ? 'border-l-2 border-l-reconciled' : 'border-l-2 border-l-flag'
         }`}
       >
@@ -133,7 +166,7 @@ export function DemoWidget() {
               return (
                 <tr
                   key={i}
-                  className={`border-b border-hairline ${
+                  className={`border-b border-hairline transition-colors duration-700 ${
                     isFlagged ? 'border-l-2 border-l-flag bg-flag-wash' : 'odd:bg-paper even:bg-ledger'
                   }`}
                 >
@@ -198,7 +231,10 @@ export function DemoWidget() {
       </div>
 
       {/* Footer prompt */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline px-5 py-4">
+      <div
+        data-print-after
+        className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline px-5 py-4"
+      >
         <p className="max-w-lg text-body-sm text-slate">
           {result.verified
             ? 'Every row reconciles. This statement would now export cleanly.'

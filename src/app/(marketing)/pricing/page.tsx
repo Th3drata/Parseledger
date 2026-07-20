@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import Reveal from '@/components/motion/Reveal';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -111,10 +112,10 @@ export default function PricingPage() {
       </p>
 
       <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {TIERS.map((tier) => (
+        {TIERS.map((tier, i) => (
+          <Reveal key={tier.name} delay={0.08 * i} className="flex">
           <div
-            key={tier.name}
-            className={`flex flex-col rounded-cards bg-paper p-8 ${
+            className={`flex w-full flex-col rounded-cards bg-paper p-8 ${
               tier.highlighted ? 'border border-ink' : 'border border-hairline'
             }`}
           >
@@ -152,6 +153,7 @@ export default function PricingPage() {
               Convert a statement
             </Link>
           </div>
+          </Reveal>
         ))}
       </div>
 

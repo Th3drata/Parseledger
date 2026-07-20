@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { BANKS, COMPETITORS, FORMATS, convertSlug } from '@/lib/seo-banks';
+import { LenisProvider } from '@/components/motion/lenis-provider';
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
+    <LenisProvider>
     <div className="flex min-h-screen flex-col bg-paper">
       <header className="border-b border-hairline bg-paper">
         <div className="mx-auto flex h-[68px] max-w-[1200px] items-center justify-between gap-6 px-6">
@@ -97,5 +99,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         </div>
       </footer>
     </div>
+    </LenisProvider>
   );
 }
