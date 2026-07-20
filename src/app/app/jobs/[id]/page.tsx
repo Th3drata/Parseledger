@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getJob } from '@/lib/store';
+import { resolveOwnerFromContext } from '@/lib/auth';
 import { ReviewScreen } from '@/components/app/review-screen';
 
 export const dynamic = 'force-dynamic';
 
 export default async function JobReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const job = getJob(id);
+  const ownerId = (await resolveOwnerFromContext()) ?? 'local';
+  const job = await getJob(id, ownerId);
   if (!job) notFound();
 
   if (job.status === 'failed') {

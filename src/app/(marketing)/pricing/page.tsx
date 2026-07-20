@@ -48,7 +48,7 @@ const TIERS: Tier[] = [
     tagline: 'For a solo bookkeeper with a steady client list.',
     highlighted: false,
     features: {
-      pages: '300 pages / month',
+      pages: '150 pages / month',
       users: '1 user',
       exports: 'CSV, Excel, QuickBooks, Xero',
       batch: 'Batch upload',
@@ -64,7 +64,7 @@ const TIERS: Tier[] = [
     tagline: 'Most practices choose Pro.',
     highlighted: true,
     features: {
-      pages: '1,000 pages / month',
+      pages: '750 pages / month',
       users: '3 users',
       exports: 'CSV, Excel, QuickBooks, Xero',
       batch: 'Batch upload',

@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { listJobs } from '@/lib/store';
 import { formatTimestamp } from '@/lib/format';
+import { resolveOwnerFromContext } from '@/lib/auth';
 import { UploadDropzone } from '@/components/app/upload-dropzone';
 import { StatusChip } from '@/components/app/status-chip';
 
 export const dynamic = 'force-dynamic';
 
-export default function AppHomePage() {
-  const jobs = listJobs();
+export default async function AppHomePage() {
+  const ownerId = (await resolveOwnerFromContext()) ?? 'local';
+  const jobs = await listJobs(ownerId);
   const demoMode = !process.env.ANTHROPIC_API_KEY;
 
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getJob, setJobExported } from '@/lib/store';
 import { exportStatement, EXPORT_FORMATS } from '@/export';
+import { resolveOwner } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -15,8 +16,11 @@ interface RouteContext {
 }
 
 export async function GET(req: Request, ctx: RouteContext): Promise<Response> {
+  const ownerId = await resolveOwner(req.headers);
+  if (ownerId === null) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+
   const { id } = await ctx.params;
-  const job = getJob(id);
+  const job = await getJob(id, ownerId);
   if (!job || !job.statement || !job.result) {
     return NextResponse.json({ error: 'Job not found or not ready.' }, { status: 404 });
   }
@@ -36,7 +40,7 @@ export async function GET(req: Request, ctx: RouteContext): Promise<Response> {
   }
 
   const { data, fileName, mime } = await exportStatement(format, job.statement);
-  setJobExported(id);
+  await setJobExported(id, ownerId);
 
   const body: BodyInit = typeof data === 'string' ? data : new Uint8Array(data);
   return new Response(body, {

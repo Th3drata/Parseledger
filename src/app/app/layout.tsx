@@ -1,6 +1,14 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { authEnabled, getUserFromContext } from '@/lib/auth';
+import { SignOutButton } from '@/components/app/sign-out-button';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const user = authEnabled() ? await getUserFromContext() : null;
+
+  // When auth is enabled, the product is behind a sign-in wall.
+  if (authEnabled() && !user) redirect('/signin');
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -12,6 +20,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/app" className="transition-colors hover:text-foreground">
               Jobs
             </Link>
+            {user && (
+              <Link href="/app/account" className="transition-colors hover:text-foreground">
+                Account
+              </Link>
+            )}
+            {user && (
+              <>
+                <span className="text-foreground/80">{user.email}</span>
+                <SignOutButton />
+              </>
+            )}
           </nav>
         </div>
       </header>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getJob, setJobStatement } from '@/lib/store';
+import { resolveOwner } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -29,16 +30,24 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_req: Request, ctx: RouteContext): Promise<Response> {
+export async function GET(req: Request, ctx: RouteContext): Promise<Response> {
+  const ownerId = await resolveOwner(req.headers);
+  if (ownerId === null) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+
   const { id } = await ctx.params;
-  const job = getJob(id);
+  const job = await getJob(id, ownerId);
   if (!job) return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
   return NextResponse.json(job);
 }
 
 export async function PATCH(req: Request, ctx: RouteContext): Promise<Response> {
+  const ownerId = await resolveOwner(req.headers);
+  if (ownerId === null) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+
   const { id } = await ctx.params;
-  if (!getJob(id)) return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
+  if (!(await getJob(id, ownerId))) {
+    return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
+  }
 
   let body: unknown;
   try {
@@ -55,7 +64,7 @@ export async function PATCH(req: Request, ctx: RouteContext): Promise<Response> 
     );
   }
 
-  const job = setJobStatement(id, parsed.data.statement);
+  const job = await setJobStatement(id, parsed.data.statement, ownerId);
   if (!job) return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
   return NextResponse.json(job);
 }
