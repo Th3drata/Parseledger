@@ -9,9 +9,9 @@
  */
 import { readdir } from 'node:fs/promises';
 import { join, extname } from 'node:path';
-import { AnthropicExtractionProvider } from '../src/extraction.js';
-import { reconcileStatement } from '../src/verification.js';
-import { formatMinor } from '../src/money.js';
+import { AnthropicExtractionProvider } from '../src/extraction';
+import { reconcileStatement } from '../src/verification';
+import { formatMinor } from '../src/money';
 
 const dir = process.argv[2];
 if (!dir) {

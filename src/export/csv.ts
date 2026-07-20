@@ -1,4 +1,4 @@
-import type { ExtractedStatement } from '../types.js';
+import type { ExtractedStatement } from '../types';
 
 /**
  * Format integer minor units as a signed decimal string, e.g. -6488 → "-64.88".

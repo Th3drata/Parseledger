@@ -3,8 +3,8 @@ import { promisify } from 'node:util';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
-import type { ExtractedStatement, ExtractedTransaction } from './types.js';
-import { parseMoneyToMinor } from './money.js';
+import type { ExtractedStatement, ExtractedTransaction } from './types';
+import { parseMoneyToMinor } from './money';
 
 const execFileAsync = promisify(execFile);
 

@@ -1,5 +1,5 @@
-import type { ExtractedStatement, ExtractedTransaction } from '../types.js';
-import { minorToDecimalString } from './csv.js';
+import type { ExtractedStatement, ExtractedTransaction } from '../types';
+import { minorToDecimalString } from './csv';
 
 /** Convert an ISO date (yyyy-mm-dd) to OFX's yyyymmdd. */
 function isoToYyyymmdd(iso: string): string {

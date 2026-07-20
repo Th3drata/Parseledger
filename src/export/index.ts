@@ -1,13 +1,13 @@
-import type { ExtractedStatement } from '../types.js';
-import { toCsv, minorToDecimalString } from './csv.js';
-import { toXeroCsv } from './xero.js';
-import { toQbo } from './qbo.js';
-import { toXlsx } from './xlsx.js';
+import type { ExtractedStatement } from '../types';
+import { toCsv, minorToDecimalString } from './csv';
+import { toXeroCsv } from './xero';
+import { toQbo } from './qbo';
+import { toXlsx } from './xlsx';
 
-export { toCsv, minorToDecimalString } from './csv.js';
-export { toXeroCsv } from './xero.js';
-export { toQbo } from './qbo.js';
-export { toXlsx } from './xlsx.js';
+export { toCsv, minorToDecimalString } from './csv';
+export { toXeroCsv } from './xero';
+export { toQbo } from './qbo';
+export { toXlsx } from './xlsx';
 
 export type ExportFormatId = 'csv' | 'xero' | 'qbo' | 'xlsx';
 

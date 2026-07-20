@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMoneyToMinor, formatMinor } from './money.js';
-import { reconcileStatement } from './verification.js';
-import { mapRawExtraction } from './extraction.js';
-import type { ExtractedStatement } from './types.js';
+import { parseMoneyToMinor, formatMinor } from './money';
+import { reconcileStatement } from './verification';
+import { mapRawExtraction } from './extraction';
+import type { ExtractedStatement } from './types';
 
 test('parseMoneyToMinor', () => {
   assert.equal(parseMoneyToMinor('1,234.56'), 123456);

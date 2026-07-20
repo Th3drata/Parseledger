@@ -2,8 +2,8 @@ import type {
   ExtractedStatement,
   VerificationIssue,
   VerificationResult,
-} from './types.js';
-import { formatMinor } from './money.js';
+} from './types';
+import { formatMinor } from './money';
 
 /**
  * The verification engine — the product's moat.

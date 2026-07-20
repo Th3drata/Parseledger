@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
-import type { ExtractedStatement } from '../types.js';
-import { formatMinor } from '../money.js';
+import type { ExtractedStatement } from '../types';
+import { formatMinor } from '../money';
 
 /**
  * xlsx export using exceljs. Source of truth for money stays integer minor

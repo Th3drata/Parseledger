@@ -1,5 +1,5 @@
-import type { ExtractedStatement } from '../types.js';
-import { minorToDecimalString } from './csv.js';
+import type { ExtractedStatement } from '../types';
+import { minorToDecimalString } from './csv';
 
 /** Convert an ISO date (yyyy-mm-dd) to Xero's expected dd/mm/yyyy. */
 function isoToDdMmYyyy(iso: string): string {

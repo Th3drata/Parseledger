@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { ExtractedStatement } from '../types.js';
-import { demoStatement } from '../lib/demo.js';
-import { toCsv } from './csv.js';
-import { toXeroCsv } from './xero.js';
-import { toQbo } from './qbo.js';
-import { toXlsx } from './xlsx.js';
+import type { ExtractedStatement } from '../types';
+import { demoStatement } from '../lib/demo';
+import { toCsv } from './csv';
+import { toXeroCsv } from './xero';
+import { toQbo } from './qbo';
+import { toXlsx } from './xlsx';
 
 test('toCsv: row count and exact first data row', () => {
   const csv = toCsv(demoStatement);
