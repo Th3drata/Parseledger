@@ -21,6 +21,15 @@ function csvField(value: string): string {
   return value;
 }
 
+/**
+ * Free-text fields (descriptions) get a leading apostrophe when they would be
+ * parsed as a formula by Excel/Sheets — CSV injection guard. Never applied to
+ * fields we generate ourselves (dates, amounts).
+ */
+export function csvTextField(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
 function csvRow(fields: string[]): string {
   return fields.map(csvField).join(',');
 }
@@ -35,7 +44,7 @@ export function toCsv(stmt: ExtractedStatement): string {
     lines.push(
       csvRow([
         tx.date,
-        tx.description,
+        csvTextField(tx.description),
         minorToDecimalString(tx.amountMinor),
         tx.balanceMinor === null ? '' : minorToDecimalString(tx.balanceMinor),
       ]),

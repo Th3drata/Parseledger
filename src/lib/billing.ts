@@ -140,6 +140,18 @@ export async function consumePaygPages(ownerId: string, pages: number): Promise<
   return Boolean(res.rows[0]);
 }
 
+/** Return previously consumed PAYG pages (e.g. when extraction fails after the draw). */
+export async function refundPaygPages(ownerId: string, pages: number): Promise<void> {
+  const pool = getPool();
+  if (!pool) return;
+  await pool.query(
+    `update subscriptions
+       set payg_pages_balance = payg_pages_balance + $2, updated_at = now()
+     where owner_id = $1`,
+    [ownerId, pages],
+  );
+}
+
 export function planLimitFor(tier: Tier): number {
   return PLANS[tier].monthlyPages;
 }

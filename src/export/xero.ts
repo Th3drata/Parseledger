@@ -1,5 +1,5 @@
 import type { ExtractedStatement } from '../types';
-import { minorToDecimalString } from './csv';
+import { minorToDecimalString, csvTextField } from './csv';
 
 /** Convert an ISO date (yyyy-mm-dd) to Xero's expected dd/mm/yyyy. */
 function isoToDdMmYyyy(iso: string): string {
@@ -35,7 +35,7 @@ export function toXeroCsv(stmt: ExtractedStatement): string {
   ];
   for (const tx of stmt.transactions) {
     lines.push(
-      csvRow([isoToDdMmYyyy(tx.date), minorToDecimalString(tx.amountMinor), '', tx.description, '', '']),
+      csvRow([isoToDdMmYyyy(tx.date), minorToDecimalString(tx.amountMinor), '', csvTextField(tx.description), '', '']),
     );
   }
   return lines.join('\r\n') + '\r\n';

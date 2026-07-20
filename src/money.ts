@@ -18,15 +18,15 @@ export function parseMoneyToMinor(raw: string): number {
     if (marker[1]!.toUpperCase() === 'DR') negative = true;
     s = s.slice(0, marker.index).trim();
   }
+  // strip currency symbols and ISO codes BEFORE sign detection ("£-12.00")
+  s = s.replace(/[£€$]/g, '').replace(/\b[A-Z]{3}\b/g, '').replace(/\s/g, '');
   if (s.startsWith('-')) {
     negative = true;
-    s = s.slice(1).trim();
+    s = s.slice(1);
   } else if (s.startsWith('+')) {
-    s = s.slice(1).trim();
+    s = s.slice(1);
   }
-
-  // strip currency symbols, ISO codes and whitespace
-  s = s.replace(/[£€$]/g, '').replace(/\b[A-Z]{3}\b/g, '').replace(/\s/g, '');
+  if (!/\d/.test(s)) throw new Error(`unparseable money value: ${JSON.stringify(raw)}`);
 
   // decimal separator: last of '.' or ','; the other is a thousands separator
   const decIdx = Math.max(s.lastIndexOf('.'), s.lastIndexOf(','));

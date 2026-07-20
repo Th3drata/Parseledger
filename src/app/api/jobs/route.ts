@@ -7,7 +7,7 @@ import { createJob, listJobs, setJobStatement, setJobFailed, getJob } from '@/li
 import { AnthropicExtractionProvider } from '@/extraction';
 import { demoStatementWithError } from '@/lib/demo';
 import { resolveOwner } from '@/lib/auth';
-import { billingEnabled, getSubscription, planLimitFor, consumePaygPages } from '@/lib/billing';
+import { billingEnabled, getSubscription, planLimitFor, consumePaygPages, refundPaygPages } from '@/lib/billing';
 import { countPages, getUsage, recordUsage } from '@/lib/usage';
 
 export const runtime = 'nodejs';
@@ -66,12 +66,16 @@ export async function POST(req: Request): Promise<Response> {
   const pageCount = await countPages(bytes, file.type);
 
   // Quota gate (billing mode only). Local / no-billing mode is unlimited.
+  // Only the pages BEYOND the monthly allowance are drawn from PAYG, and the
+  // draw is refunded if extraction fails — the user never pays for no output.
+  let paygConsumed = 0;
   if (billingEnabled()) {
     const sub = await getSubscription(ownerId);
     const used = await getUsage(ownerId);
     const limit = planLimitFor(sub.tier);
-    if (used + pageCount > limit) {
-      const coveredByPayg = await consumePaygPages(ownerId, pageCount);
+    const overage = Math.min(pageCount, used + pageCount - limit);
+    if (overage > 0) {
+      const coveredByPayg = await consumePaygPages(ownerId, overage);
       if (!coveredByPayg) {
         return NextResponse.json(
           {
@@ -81,15 +85,16 @@ export async function POST(req: Request): Promise<Response> {
           { status: 402 },
         );
       }
+      paygConsumed = overage;
     }
   }
 
   const job = await createJob(file.name || `upload${ext}`, ownerId, pageCount);
-  await recordUsage(ownerId, job.id, pageCount);
 
   // Demo mode: no API key → load a sample statement so the flow is demo-able.
   if (!process.env.ANTHROPIC_API_KEY) {
     await setJobStatement(job.id, demoStatementWithError, ownerId);
+    await recordUsage(ownerId, job.id, pageCount);
     return NextResponse.json(await getJob(job.id, ownerId), { status: 201 });
   }
 
@@ -99,9 +104,12 @@ export async function POST(req: Request): Promise<Response> {
     const provider = new AnthropicExtractionProvider();
     const statement = await provider.extract({ filePath: tmpPath });
     await setJobStatement(job.id, statement, ownerId);
+    // Bill only after a successful extraction.
+    await recordUsage(ownerId, job.id, pageCount);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Extraction failed.';
     await setJobFailed(job.id, message, ownerId);
+    if (paygConsumed > 0) await refundPaygPages(ownerId, paygConsumed);
   } finally {
     await unlink(tmpPath).catch(() => undefined);
   }

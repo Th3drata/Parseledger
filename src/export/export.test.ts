@@ -65,3 +65,24 @@ test('toXlsx: returns a non-empty Uint8Array with the zip magic bytes', async ()
   assert.equal(bytes[0], 0x50); // 'P'
   assert.equal(bytes[1], 0x4b); // 'K'
 });
+
+test('CSV formula injection guard on descriptions', async () => {
+  const { toCsv } = await import('./csv');
+  const { toXeroCsv } = await import('./xero');
+  const hostile = {
+    ...demoStatement,
+    transactions: [
+      { date: '2026-06-01', description: '=HYPERLINK("http://evil","x")', amountMinor: -100, balanceMinor: null },
+      { date: '2026-06-02', description: '+1234567890', amountMinor: 100, balanceMinor: null },
+    ],
+  };
+  const csv = toCsv(hostile);
+  const xero = toXeroCsv(hostile);
+  for (const out of [csv, xero]) {
+    assert.ok(!/(^|,)=HYPERLINK/m.test(out), 'formula must be neutralised');
+    assert.ok(out.includes(`'=HYPERLINK`));
+    assert.ok(out.includes(`'+1234567890`));
+  }
+  // legitimate negative amounts stay intact
+  assert.ok(csv.includes(',-1.00,'));
+});

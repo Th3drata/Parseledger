@@ -19,9 +19,13 @@ test('parseMoneyToMinor', () => {
   assert.equal(parseMoneyToMinor('100'), 10000);
   assert.equal(parseMoneyToMinor('GBP 12.34'), 1234);
   assert.equal(parseMoneyToMinor('12.345'), 1234500); // trailing group of 3 = EU thousands
+  assert.equal(parseMoneyToMinor('£-12.00'), -1200); // symbol before sign (overdrawn UK format)
+  assert.equal(parseMoneyToMinor('£-1,234.56'), -123456);
   assert.throws(() => parseMoneyToMinor(''));
   assert.throws(() => parseMoneyToMinor('abc'));
   assert.throws(() => parseMoneyToMinor('1.2345'));
+  assert.throws(() => parseMoneyToMinor('£')); // no digits must throw, never silent 0
+  assert.throws(() => parseMoneyToMinor('-'));
 });
 
 test('formatMinor', () => {

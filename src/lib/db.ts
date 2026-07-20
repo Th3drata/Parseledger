@@ -20,9 +20,12 @@ export function getPool(): Pool | null {
 
   const local = url.includes('localhost') || url.includes('127.0.0.1');
   const sslDisabled = url.includes('sslmode=disable');
+  // Verified TLS by default — this connection carries financial data. Providers
+  // with self-signed chains: set DATABASE_SSL_NO_VERIFY=1 (or better, pin a CA).
+  const noVerify = process.env.DATABASE_SSL_NO_VERIFY === '1';
   const pool = new Pool({
     connectionString: url,
-    ssl: local || sslDisabled ? undefined : { rejectUnauthorized: false },
+    ssl: local || sslDisabled ? undefined : noVerify ? { rejectUnauthorized: false } : true,
   });
   g.__plPool = pool;
   return pool;
