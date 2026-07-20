@@ -172,7 +172,7 @@ export function DemoWidget() {
                 >
                   <td className="tnum whitespace-nowrap px-5 py-1.5 text-figure text-ink">{tx.date}</td>
                   <td className="max-w-56 truncate px-5 py-1.5 text-body-sm text-ink">{tx.description}</td>
-                  <td className="tnum px-5 py-1.5 text-right text-figure text-ink">
+                  <td className="tnum whitespace-nowrap px-5 py-1.5 text-right text-figure text-ink">
                     {editing === i ? (
                       <span className="inline-flex items-center gap-1">
                         <input

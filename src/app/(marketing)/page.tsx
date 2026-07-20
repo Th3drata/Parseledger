@@ -144,24 +144,37 @@ export default function LandingPage() {
             <p className="mt-3 text-body-sm text-slate">Free tier, no card. 10 pages a month.</p>
           </Reveal>
         </div>
-        {/* Cinematic panel with the live demo floating over it */}
+        {/* Cinematic panel — the desk stays visible on the left, the live demo floats right */}
         <div className="mt-14">
           <div className="overflow-hidden rounded-cards">
+            {/* Ambient video on motion-safe desktop; still image otherwise */}
+            <video
+              className="hidden h-[300px] w-full object-cover object-[32%_center] sm:motion-safe:block sm:h-[520px]"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="/hero.jpg"
+              aria-hidden
+            >
+              <source src="/hero.mp4" type="video/mp4" />
+            </video>
             <Image
               src="/hero.jpg"
               alt="An open accounting ledger and a bank statement on a writing desk, overlooking a misty green valley at dawn"
               width={2560}
               height={1097}
               priority
-              className="h-[300px] w-full object-cover object-center sm:h-[420px]"
+              className="h-[300px] w-full object-cover object-[32%_center] sm:h-[520px] sm:motion-safe:hidden"
             />
           </div>
-          <div className="relative z-10 mx-auto -mt-20 max-w-3xl px-0 sm:-mt-32 sm:px-6">
+          <div className="relative z-10 -mt-20 px-0 sm:px-6 lg:-mt-[26rem] lg:ml-auto lg:mr-8 lg:max-w-xl xl:max-w-2xl">
             <DemoWidget />
-            <p className="mt-3 text-caption text-ash">
+            <p className="mt-3 text-caption text-ash lg:text-paper/70">
               Live demo — this is the real verification engine. Click the flagged amount and fix it.
             </p>
           </div>
+          <div className="hidden lg:block lg:h-16" />
         </div>
       </section>
 
