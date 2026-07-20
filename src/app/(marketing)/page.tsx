@@ -144,12 +144,12 @@ export default function LandingPage() {
             <p className="mt-3 text-body-sm text-slate">Free tier, no card. 10 pages a month.</p>
           </Reveal>
         </div>
-        {/* Cinematic panel — the desk stays visible on the left, the live demo floats right */}
+        {/* Cinematic panel — the demo lives fully inside the scene, desk visible on the left */}
         <div className="mt-14">
-          <div className="overflow-hidden rounded-cards">
+          <div className="relative overflow-hidden rounded-cards">
             {/* Ambient video on motion-safe desktop; still image otherwise */}
             <video
-              className="hidden h-[300px] w-full object-cover object-[32%_center] sm:motion-safe:block sm:h-[520px]"
+              className="absolute inset-0 hidden h-full w-full object-cover object-[25%_center] sm:motion-safe:block"
               autoPlay
               muted
               loop
@@ -162,19 +162,20 @@ export default function LandingPage() {
             <Image
               src="/hero.jpg"
               alt="An open accounting ledger and a bank statement on a writing desk, overlooking a misty green valley at dawn"
-              width={2560}
-              height={1097}
+              fill
+              sizes="100vw"
               priority
-              className="h-[300px] w-full object-cover object-[32%_center] sm:h-[520px] sm:motion-safe:hidden"
+              className="object-cover object-[25%_center] sm:motion-safe:hidden"
             />
+            <div className="relative flex justify-end p-3 sm:p-8 lg:p-12">
+              <div className="w-full sm:max-w-xl xl:max-w-2xl">
+                <DemoWidget />
+              </div>
+            </div>
           </div>
-          <div className="relative z-10 -mt-20 px-0 sm:px-6 lg:-mt-[26rem] lg:ml-auto lg:mr-8 lg:max-w-xl xl:max-w-2xl">
-            <DemoWidget />
-            <p className="mt-3 text-caption text-ash">
-              Live demo — this is the real verification engine. Click the flagged amount and fix it.
-            </p>
-          </div>
-          <div className="hidden lg:block lg:h-16" />
+          <p className="mt-3 text-caption text-ash">
+            Live demo — this is the real verification engine. Click the flagged amount and fix it.
+          </p>
         </div>
       </section>
 

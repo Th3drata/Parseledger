@@ -142,7 +142,8 @@ export function DemoWidget() {
       </div>
 
       {/* Ledger table */}
-      <div className="max-h-72 overflow-y-auto overflow-x-auto">
+      {/* height snapped to whole rows: header + opening + 5 transactions */}
+      <div className="max-h-[234px] overflow-y-auto overflow-x-auto">
         <table className="w-full">
           <thead className="sticky top-0 bg-ledger text-left">
             <tr className="border-b border-iron">
