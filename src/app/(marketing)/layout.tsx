@@ -12,17 +12,20 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             Parseledger
           </Link>
           <nav className="hidden items-center gap-6 md:flex">
+            <Link href="/#workflow" className="text-body-sm text-slate hover:text-ink">
+              How it works
+            </Link>
+            <Link href="/#verification" className="text-body-sm text-slate hover:text-ink">
+              Verification
+            </Link>
+            <Link href="/#banks" className="text-body-sm text-slate hover:text-ink">
+              Banks
+            </Link>
             <Link href="/pricing" className="text-body-sm text-slate hover:text-ink">
               Pricing
             </Link>
             <Link href="/security" className="text-body-sm text-slate hover:text-ink">
               Security
-            </Link>
-            <Link href="/xero" className="text-body-sm text-slate hover:text-ink">
-              Xero
-            </Link>
-            <Link href="/quickbooks" className="text-body-sm text-slate hover:text-ink">
-              QuickBooks
             </Link>
           </nav>
           <div className="flex items-center gap-3">
