@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { DemoWidget } from '@/components/marketing/demo-widget';
+import { AppFrame } from '@/components/marketing/app-frame';
 import { ExtractArtifact, VerifyArtifact, ReviewArtifact, ExportArtifact } from '@/components/marketing/mocks';
 import { ProductTour, type TourStep } from '@/components/marketing/product-tour';
 import { VerifiedBadge } from '@/components/app/verified-badge';
@@ -147,6 +148,37 @@ export default function LandingPage() {
           <p className="mt-3 text-caption text-ash">
             Live demo — this is the real verification engine. Click the flagged amount and fix it.
           </p>
+        </div>
+      </section>
+
+      {/* ————— Product band (inverted ink stack, the real software) ————— */}
+      <section aria-label="The review screen" className="bg-ink">
+        <div className="mx-auto max-w-[1200px] px-6 py-24">
+          <Reveal>
+            <div className="max-w-2xl">
+              <p className="tnum text-caption font-medium uppercase tracking-[0.14em] text-paper/50">
+                The review screen
+              </p>
+              <h2 className="mt-4 font-serif text-heading font-normal text-paper">
+                This is what a misread digit looks like here
+              </h2>
+              <p className="mt-5 text-body text-paper/60">
+                A real statement in review: the equation is off by −£3.56, the responsible row
+                carries the flag, and the computed closing sits beside the printed one. Nothing
+                to hunt for — the error is already found.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={0.15}>
+            <div className="mt-12">
+              <AppFrame
+                src="/screens/review-flagged.png"
+                alt="Parseledger review screen showing a flagged Tesco row and a reconciliation equation that is off by £3.56"
+                url="app.parseledger.com/jobs/monzo-june-2026"
+                priority
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -346,6 +378,40 @@ export default function LandingPage() {
                   ))}
                 </ul>
               </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ————— Workspace ————— */}
+      <Rule />
+      <section>
+        <div className="mx-auto max-w-[1200px] px-6 py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[2fr_3fr]">
+            <Reveal>
+              <div>
+                <Eyebrow>The workspace</Eyebrow>
+                <h2 className="mt-4 font-serif text-heading font-normal text-ink">
+                  A quarter of statements, one sitting
+                </h2>
+                <p className="mt-5 text-body text-ink-soft">
+                  Drop the month&apos;s statements in one go. Each job carries its verification
+                  status in the list — Verified, Needs review, or failed — so you triage at a
+                  glance and spend your attention only where a flag is waiting.
+                </p>
+                <p className="mt-3 text-body-sm text-slate">
+                  Client folders and batch upload arrive with the Practice plan; the workspace
+                  is the same speed at ten statements or three hundred.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={0.12}>
+              <AppFrame
+                src="/screens/workspace.png"
+                alt="Parseledger workspace with the upload dropzone and a list of recent jobs with verification status chips"
+                url="app.parseledger.com"
+                caption="The workspace: upload, triage by status, open the one that needs you."
+              />
             </Reveal>
           </div>
         </div>
@@ -582,22 +648,32 @@ export default function LandingPage() {
       <Rule />
       <section>
         <div className="mx-auto max-w-[1200px] px-6 py-28">
-          <div className="max-w-2xl">
-            <Reveal>
-              <h2 className="font-serif text-heading font-normal text-ink sm:text-heading-lg">
-                The first statement takes a minute. The badge takes zero errors.
-              </h2>
-            </Reveal>
-            <Reveal delay={0.12}>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link
-                  href="/app"
-                  className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
-                >
-                  Convert a statement
-                </Link>
-                <p className="text-body-sm text-slate">10 free pages a month. No card.</p>
-              </div>
+          <div className="grid items-center gap-12 lg:grid-cols-[2fr_3fr]">
+            <div>
+              <Reveal>
+                <h2 className="font-serif text-heading font-normal text-ink sm:text-heading-lg">
+                  The first statement takes a minute. The badge takes zero errors.
+                </h2>
+              </Reveal>
+              <Reveal delay={0.12}>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Link
+                    href="/app"
+                    className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
+                  >
+                    Convert a statement
+                  </Link>
+                  <p className="text-body-sm text-slate">10 free pages a month. No card.</p>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={0.15}>
+              <AppFrame
+                src="/screens/review-verified.png"
+                alt="Parseledger review screen fully reconciled, showing the green Verified to the cent badge and a balanced equation"
+                url="app.parseledger.com/jobs/monzo-june-2026"
+                caption="The same statement, corrected: every check green, ready to export."
+              />
             </Reveal>
           </div>
         </div>
