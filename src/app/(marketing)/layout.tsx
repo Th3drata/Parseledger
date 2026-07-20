@@ -30,13 +30,13 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </nav>
           <div className="flex items-center gap-3">
             <Link
-              href="/app"
+              href="/signin"
               className="hidden rounded-buttons border border-hairline px-4 py-2 text-body-sm font-medium text-ink hover:bg-ledger sm:inline-block"
             >
               Sign in
             </Link>
             <Link
-              href="/app"
+              href="/signup"
               className="rounded-buttons bg-ink px-4 py-2 text-body-sm font-medium text-paper hover:bg-ink-soft"
             >
               Start free

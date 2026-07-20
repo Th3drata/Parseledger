@@ -106,7 +106,7 @@ export default async function ConvertPage({ params }: PageProps) {
         </p>
         <div className="mt-8">
           <Link
-            href="/app"
+            href="/signup"
             className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
           >
             Convert a statement

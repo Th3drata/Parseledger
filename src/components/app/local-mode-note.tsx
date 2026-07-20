@@ -8,10 +8,10 @@ export function LocalModeNote() {
         for this session only.
       </div>
       <Link
-        href="/app"
+        href="/signup"
         className="inline-block rounded-buttons bg-ink px-4 py-2.5 text-center text-body-sm font-medium text-white transition-colors hover:bg-ink-soft"
       >
-        Go to the app
+        Get early access
       </Link>
     </div>
   );

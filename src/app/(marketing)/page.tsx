@@ -119,7 +119,7 @@ export default function LandingPage() {
             </p>
           </Reveal>
           <Reveal delay={0.5} y={16}>
-            <form action="/app" className="mt-8 flex max-w-xl flex-wrap items-center gap-3">
+            <form action="/signup" className="mt-8 flex max-w-xl flex-wrap items-center gap-3">
               <input
                 type="email"
                 name="email"
@@ -597,7 +597,7 @@ export default function LandingPage() {
                 See full pricing
               </Link>
               <Link
-                href="/app"
+                href="/signup"
                 className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
               >
                 Start free
@@ -658,7 +658,7 @@ export default function LandingPage() {
               <Reveal delay={0.12}>
                 <div className="mt-8 flex flex-wrap items-center gap-4">
                   <Link
-                    href="/app"
+                    href="/signup"
                     className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
                   >
                     Convert a statement

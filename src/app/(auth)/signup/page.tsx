@@ -34,8 +34,8 @@ export default function SignUpPage() {
 
       <p className="text-body-sm text-slate">
         Want early access?{' '}
-        <Link href="/app" className="text-slate underline hover:text-ink transition-colors">
-          Try the demo →
+        <Link href="/#demo" className="text-slate underline hover:text-ink transition-colors">
+          Try the demo below →
         </Link>
       </p>
     </div>

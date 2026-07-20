@@ -143,7 +143,7 @@ export default function PricingPage() {
               ))}
             </ul>
             <Link
-              href="/app"
+              href="/signup"
               className={`mt-8 rounded-buttons px-4 py-2 text-center text-body-sm font-medium ${
                 tier.highlighted
                   ? 'bg-ink text-paper hover:bg-ink-soft'
