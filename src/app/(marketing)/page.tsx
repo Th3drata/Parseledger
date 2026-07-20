@@ -2,11 +2,40 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { DemoWidget } from '@/components/marketing/demo-widget';
 import { ExtractArtifact, VerifyArtifact, ReviewArtifact, ExportArtifact } from '@/components/marketing/mocks';
+import { ProductTour, type TourStep } from '@/components/marketing/product-tour';
 import { VerifiedBadge } from '@/components/app/verified-badge';
 import { BANKS, FORMATS, convertSlug, getFormat } from '@/lib/seo-banks';
 import SplitTextHero from '@/components/motion/SplitTextHero';
+import ScrambleIn from '@/components/motion/ScrambleIn';
 import Reveal from '@/components/motion/Reveal';
 import { RuledLine } from '@/components/motion/ruled-line';
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    kicker: '01',
+    title: 'Extract',
+    body: 'Drop a PDF export from a banking app, a posted original scanned at the office, or a phone photo taken at a client’s kitchen table. Native PDFs take a fast text path; images go through a vision model. Multi-page statements come through as one continuous record, in statement order.',
+    note: 'Amounts are captured exactly as printed — signs, separators, CR/DR markers — then normalised into integer pence.',
+  },
+  {
+    kicker: '02',
+    title: 'Verify',
+    body: 'Both checks execute the moment extraction finishes. If the statement’s own identity holds, it arrives already wearing the badge. If it doesn’t, the reconciliation bar shows exactly how far off it is — computed closing against printed closing — and which rows are responsible.',
+    note: 'A statement with no printed running balances still gets the totals check; one bad digit can’t hide either way.',
+  },
+  {
+    kicker: '03',
+    title: 'Review',
+    body: 'Flagged rows are highlighted in the review table with the printed balance beside the computed one. Click the cell, type what the paper actually says, and reconciliation re-runs on every keystroke. When the last issue clears, the badge flips to green in front of you.',
+    note: 'Review is a deliberate step, not a formality — this is financial data, and the product never pretends otherwise.',
+  },
+  {
+    kicker: '04',
+    title: 'Export',
+    body: 'A verified statement exports to CSV, Excel, QuickBooks (.qbo) and Xero-formatted CSV — files that import cleanly, with dates and signs the way each tool expects them. An unverified statement can still be exported, but only through an explicit choice.',
+    note: 'Descriptions are sanitised against spreadsheet formula injection — a small thing, until the day it isn’t.',
+  },
+];
 
 export const metadata: Metadata = {
   title: 'Parseledger — bank statements to clean data, verified to the cent',
@@ -89,21 +118,28 @@ export default function LandingPage() {
             </p>
           </Reveal>
           <Reveal delay={0.5} y={16}>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href="/app"
+            <form action="/app" className="mt-8 flex max-w-xl flex-wrap items-center gap-3">
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your work email"
+                aria-label="Work email"
+                className="min-w-0 flex-1 rounded-inputs bg-ledger px-4 py-2.5 text-body-sm text-ink placeholder:text-ash focus:bg-paper focus:outline-none focus:ring-1 focus:ring-iron"
+              />
+              <button
+                type="submit"
                 className="rounded-buttons bg-ink px-5 py-2.5 text-body-sm font-medium text-paper hover:bg-ink-soft"
               >
-                Convert a statement
-              </Link>
+                Start free
+              </button>
               <Link
                 href="/pricing"
                 className="rounded-buttons border border-hairline px-5 py-2.5 text-body-sm font-medium text-ink hover:bg-ledger"
               >
                 View pricing
               </Link>
-              <p className="text-body-sm text-slate">Free tier, no card. 10 pages a month.</p>
-            </div>
+            </form>
+            <p className="mt-3 text-body-sm text-slate">Free tier, no card. 10 pages a month.</p>
           </Reveal>
         </div>
         <div className="mt-14 max-w-3xl">
@@ -114,23 +150,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ————— Proof strip ————— */}
-      <Rule />
-      <section aria-label="How Parseledger is built">
-        <div className="mx-auto grid max-w-[1200px] gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ['2', 'independent checks on every statement, before anything earns the badge'],
-            ['0', 'floating-point operations on money — every figure is integer minor units'],
-            ['24h', 'maximum file retention. Statements are purged once you have your export'],
-            ['15', 'UK & Irish banks covered at launch, from Monzo to Bank of Ireland'],
-          ].map(([n, label], i) => (
-            <Reveal key={n} delay={0.07 * i}>
-              <div>
-                <p className="tnum text-[44px] font-medium leading-none text-ink">{n}</p>
-                <p className="mt-3 max-w-[26ch] text-body-sm text-slate">{label}</p>
+      {/* ————— Proof band (inverted ink stack) ————— */}
+      <section aria-label="How Parseledger is built" className="bg-ink">
+        <div className="mx-auto max-w-[1200px] px-6 py-20">
+          <Reveal>
+            <h2 className="max-w-2xl font-serif text-heading font-normal text-paper">
+              Built like the ledger it feeds.
+            </h2>
+          </Reveal>
+          <div className="mt-14 grid gap-x-0 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['2', 'independent checks on every statement, before anything earns the badge'],
+              ['0', 'floating-point operations on money — every figure is integer minor units'],
+              ['24h', 'maximum file retention. Statements are purged once you have your export'],
+              ['15', 'UK & Irish banks covered at launch, from Monzo to Bank of Ireland'],
+            ].map(([n, label], i) => (
+              <div
+                key={n}
+                className={`lg:px-8 ${i > 0 ? 'lg:border-l lg:border-paper/15' : 'lg:pl-0'}`}
+              >
+                <ScrambleIn
+                  text={String(n)}
+                  delay={i * 140}
+                  className="tnum block text-[52px] font-medium leading-none text-paper"
+                />
+                <p className="mt-4 max-w-[26ch] text-body-sm leading-relaxed text-paper/60">{label}</p>
               </div>
-            </Reveal>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -227,103 +274,13 @@ export default function LandingPage() {
             </Reveal>
           </div>
 
-          <div className="mt-16 space-y-20">
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <Reveal>
-                <div>
-                  <Eyebrow>01 — Extract</Eyebrow>
-                  <h3 className="mt-3 text-subheading font-medium text-ink">
-                    Any statement, one structured result
-                  </h3>
-                  <p className="mt-4 max-w-xl text-body text-ink-soft">
-                    Drop a PDF export from a banking app, a posted original scanned at the
-                    office, or a phone photo taken at a client&apos;s kitchen table. Native PDFs
-                    take a fast text path; images go through a vision model. Multi-page
-                    statements come through as one continuous record, in statement order.
-                  </p>
-                  <p className="mt-3 max-w-xl text-body-sm text-slate">
-                    Amounts are captured exactly as printed — signs, separators, CR/DR markers —
-                    then normalised into integer pence. No floats, ever.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal delay={0.12}>
-                <ExtractArtifact />
-              </Reveal>
-            </div>
-
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <Reveal delay={0.12} className="lg:order-2">
-                <div>
-                  <Eyebrow>02 — Verify</Eyebrow>
-                  <h3 className="mt-3 text-subheading font-medium text-ink">
-                    The arithmetic runs before you see a single row
-                  </h3>
-                  <p className="mt-4 max-w-xl text-body text-ink-soft">
-                    Both checks execute the moment extraction finishes. If the statement&apos;s
-                    own identity holds, it arrives already wearing the badge. If it
-                    doesn&apos;t, the reconciliation bar shows you exactly how far off it is —
-                    computed closing against printed closing — and which rows are responsible.
-                  </p>
-                  <p className="mt-3 max-w-xl text-body-sm text-slate">
-                    A statement with no printed running balances still gets the totals check;
-                    one bad digit can&apos;t hide in either case.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal className="lg:order-1">
-                <VerifyArtifact />
-              </Reveal>
-            </div>
-
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <Reveal>
-                <div>
-                  <Eyebrow>03 — Review</Eyebrow>
-                  <h3 className="mt-3 text-subheading font-medium text-ink">
-                    Fix the row, watch the equation close
-                  </h3>
-                  <p className="mt-4 max-w-xl text-body text-ink-soft">
-                    Flagged rows are highlighted in the review table with the printed balance
-                    beside the computed one. Click the cell, type what the paper actually says,
-                    and reconciliation re-runs on every keystroke. When the last issue clears,
-                    the badge flips to green in front of you.
-                  </p>
-                  <p className="mt-3 max-w-xl text-body-sm text-slate">
-                    Review is a deliberate step, not a formality — this is financial data, and
-                    the product never pretends otherwise.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal delay={0.12}>
-                <ReviewArtifact />
-              </Reveal>
-            </div>
-
-            <div className="grid items-center gap-10 lg:grid-cols-2">
-              <Reveal delay={0.12} className="lg:order-2">
-                <div>
-                  <Eyebrow>04 — Export</Eyebrow>
-                  <h3 className="mt-3 text-subheading font-medium text-ink">
-                    Four formats, gated by the badge
-                  </h3>
-                  <p className="mt-4 max-w-xl text-body text-ink-soft">
-                    A verified statement exports to CSV, Excel, QuickBooks (.qbo) and
-                    Xero-formatted CSV — files that import cleanly, with dates and signs the way
-                    each tool expects them. An unverified statement can still be exported, but
-                    only through an explicit &ldquo;export unverified&rdquo; choice. Nothing
-                    slips out the side door.
-                  </p>
-                  <p className="mt-3 max-w-xl text-body-sm text-slate">
-                    Descriptions are sanitised against spreadsheet formula injection — a small
-                    thing, until the day it isn&apos;t.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal className="lg:order-1">
-                <ExportArtifact />
-              </Reveal>
-            </div>
+          <div className="mt-16">
+            <ProductTour steps={TOUR_STEPS}>
+              <ExtractArtifact />
+              <VerifyArtifact />
+              <ReviewArtifact />
+              <ExportArtifact />
+            </ProductTour>
           </div>
         </div>
       </section>
