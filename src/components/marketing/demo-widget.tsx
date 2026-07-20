@@ -142,22 +142,22 @@ export function DemoWidget() {
       </div>
 
       {/* Ledger table */}
-      <div className="max-h-72 overflow-y-auto">
+      <div className="max-h-72 overflow-y-auto overflow-x-auto">
         <table className="w-full">
           <thead className="sticky top-0 bg-ledger text-left">
             <tr className="border-b border-iron">
-              <th className="px-5 py-2 text-caption font-semibold uppercase text-slate">Date</th>
-              <th className="px-5 py-2 text-caption font-semibold uppercase text-slate">Description</th>
-              <th className="px-5 py-2 text-right text-caption font-semibold uppercase text-slate">Amount</th>
-              <th className="px-5 py-2 text-right text-caption font-semibold uppercase text-slate">Balance</th>
+              <th className="px-3 py-2 sm:px-5 text-caption font-semibold uppercase text-slate">Date</th>
+              <th className="px-3 py-2 sm:px-5 text-caption font-semibold uppercase text-slate">Description</th>
+              <th className="px-3 py-2 sm:px-5 text-right text-caption font-semibold uppercase text-slate">Amount</th>
+              <th className="hidden px-3 py-2 text-right text-caption font-semibold uppercase text-slate sm:table-cell sm:px-5">Balance</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b border-hairline">
-              <td className="px-5 py-1.5 text-body-sm text-slate" colSpan={3}>
+              <td className="px-3 py-1.5 sm:px-5 text-body-sm text-slate" colSpan={3}>
                 Opening balance
               </td>
-              <td className="tnum px-5 py-1.5 text-right text-figure text-slate">
+              <td className="tnum hidden px-3 py-1.5 text-right text-figure text-slate sm:table-cell sm:px-5">
                 {formatMinor(stmt.openingBalanceMinor, stmt.currency)}
               </td>
             </tr>
@@ -170,9 +170,12 @@ export function DemoWidget() {
                     isFlagged ? 'border-l-2 border-l-flag bg-flag-wash' : 'odd:bg-paper even:bg-ledger'
                   }`}
                 >
-                  <td className="tnum whitespace-nowrap px-5 py-1.5 text-figure text-ink">{tx.date}</td>
-                  <td className="max-w-56 truncate px-5 py-1.5 text-body-sm text-ink">{tx.description}</td>
-                  <td className="tnum whitespace-nowrap px-5 py-1.5 text-right text-figure text-ink">
+                  <td className="tnum whitespace-nowrap px-3 py-1.5 text-figure text-ink sm:px-5">
+                    <span className="sm:hidden">{tx.date.slice(5)}</span>
+                    <span className="hidden sm:inline">{tx.date}</span>
+                  </td>
+                  <td className="max-w-24 truncate px-3 py-1.5 text-body-sm text-ink sm:max-w-56 sm:px-5">{tx.description}</td>
+                  <td className="tnum whitespace-nowrap px-3 py-1.5 sm:px-5 text-right text-figure text-ink">
                     {editing === i ? (
                       <span className="inline-flex items-center gap-1">
                         <input
@@ -212,17 +215,17 @@ export function DemoWidget() {
                       </button>
                     )}
                   </td>
-                  <td className="tnum px-5 py-1.5 text-right text-figure text-slate">
+                  <td className="tnum hidden px-3 py-1.5 text-right text-figure text-slate sm:table-cell sm:px-5">
                     {tx.balanceMinor === null ? '—' : formatMinor(tx.balanceMinor, stmt.currency)}
                   </td>
                 </tr>
               );
             })}
             <tr className="border-t border-iron">
-              <td className="px-5 py-1.5 text-body-sm text-slate" colSpan={3}>
+              <td className="px-3 py-1.5 sm:px-5 text-body-sm text-slate" colSpan={3}>
                 Closing balance
               </td>
-              <td className="tnum px-5 py-1.5 text-right text-figure text-ink">
+              <td className="tnum hidden px-3 py-1.5 text-right text-figure text-ink sm:table-cell sm:px-5">
                 {formatMinor(stmt.closingBalanceMinor, stmt.currency)}
               </td>
             </tr>

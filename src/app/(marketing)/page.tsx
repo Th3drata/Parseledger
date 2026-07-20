@@ -170,7 +170,7 @@ export default function LandingPage() {
           </div>
           <div className="relative z-10 -mt-20 px-0 sm:px-6 lg:-mt-[26rem] lg:ml-auto lg:mr-8 lg:max-w-xl xl:max-w-2xl">
             <DemoWidget />
-            <p className="mt-3 text-caption text-ash lg:text-paper/70">
+            <p className="mt-3 text-caption text-ash">
               Live demo — this is the real verification engine. Click the flagged amount and fix it.
             </p>
           </div>
