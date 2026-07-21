@@ -3,6 +3,7 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { DemoWidget } from '@/components/marketing/demo-widget';
 import { AppFrame } from '@/components/marketing/app-frame';
+import { HeroVideo } from '@/components/marketing/hero-video';
 import { ExtractArtifact, VerifyArtifact, ReviewArtifact, ExportArtifact } from '@/components/marketing/mocks';
 import { ProductTour, type TourStep } from '@/components/marketing/product-tour';
 import { ReconciliationPiece } from '@/components/marketing/reconciliation-piece';
@@ -151,26 +152,16 @@ export default function LandingPage() {
         {/* Cinematic panel — the demo lives fully inside the scene, desk visible on the left */}
         <div className="mt-14">
           <div className="relative overflow-hidden rounded-cards">
-            {/* Ambient video on motion-safe desktop; still image otherwise */}
-            <video
-              className="absolute inset-0 hidden h-full w-full object-cover object-[25%_center] sm:motion-safe:block"
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster="/hero.jpg"
-              aria-hidden
-            >
-              <source src="/hero.mp4" type="video/mp4" />
-            </video>
+            {/* Still image always present (LCP); the video fades in on top once it actually plays */}
             <Image
               src="/hero.jpg"
               alt="An open accounting ledger and a bank statement on a writing desk, overlooking a misty green valley at dawn"
               fill
               sizes="100vw"
               priority
-              className="object-cover object-[25%_center] sm:motion-safe:hidden"
+              className="object-cover object-[25%_center]"
             />
+            <HeroVideo />
             <div className="relative flex justify-end p-3 sm:p-8 lg:p-12">
               <div className="w-full sm:max-w-xl xl:max-w-2xl">
                 <DemoWidget />
