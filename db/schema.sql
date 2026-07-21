@@ -93,3 +93,36 @@ alter table verification_issues enable row level security;
 alter table usage_events enable row level security;
 alter table subscriptions enable row level security;
 -- No policies on purpose: only the service role (which bypasses RLS) may read/write.
+
+-- ——— Audit trail (REV-7 / SEC-5) + spec wave additions ———
+
+alter table statements add column if not exists balances_missing boolean not null default false;
+alter table statements add column if not exists declared_transaction_count int;
+alter table transactions add column if not exists confidence real;
+
+create table if not exists corrections (
+  id          uuid primary key default gen_random_uuid(),
+  job_id      uuid not null references jobs(id) on delete cascade,
+  owner_id    text not null,
+  actor       text not null,
+  row_ref     int,
+  field       text not null,
+  old_value   text,
+  new_value   text,
+  created_at  timestamptz not null default now()
+);
+
+create table if not exists audit_events (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    text not null,
+  job_id      uuid references jobs(id) on delete set null,
+  kind        text not null,
+  detail      jsonb not null default '{}',
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists corrections_job_idx on corrections (job_id, created_at desc);
+create index if not exists audit_events_job_idx on audit_events (job_id, created_at desc);
+
+alter table corrections enable row level security;
+alter table audit_events enable row level security;

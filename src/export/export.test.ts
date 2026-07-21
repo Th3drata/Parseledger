@@ -114,7 +114,7 @@ test('toXlsx: two sheets — Transactions and Reconciliation (EXP-4)', async () 
   // re-read with exceljs: the zip is compressed, raw-byte search won't work
   const ExcelJS = (await import('exceljs')).default;
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(Buffer.from(bytes));
+  await wb.xlsx.load(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
   const names = wb.worksheets.map((w) => w.name);
   assert.deepEqual(names, ['Transactions', 'Reconciliation']);
 });

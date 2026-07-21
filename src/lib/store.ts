@@ -200,8 +200,9 @@ export async function setJobStatement(
     const stmtRes = await client.query<{ id: string }>(
       `insert into statements
          (job_id, bank_name, account_holder, account_number, currency,
-          period_start, period_end, opening_balance_minor, closing_balance_minor, verified)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          period_start, period_end, opening_balance_minor, closing_balance_minor, verified,
+          balances_missing, declared_transaction_count)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        returning id`,
       [
         id,
@@ -214,6 +215,8 @@ export async function setJobStatement(
         statement.openingBalanceMinor,
         statement.closingBalanceMinor,
         result.verified,
+        statement.balancesMissing === true,
+        statement.declaredTransactionCount ?? null,
       ],
     );
     const statementId = stmtRes.rows[0]?.id;
@@ -222,9 +225,9 @@ export async function setJobStatement(
     for (const [i, tx] of statement.transactions.entries()) {
       await client.query(
         `insert into transactions
-           (statement_id, row_index, tx_date, description, amount_minor, balance_minor)
-         values ($1, $2, $3, $4, $5, $6)`,
-        [statementId, i, tx.date, tx.description, tx.amountMinor, tx.balanceMinor],
+           (statement_id, row_index, tx_date, description, amount_minor, balance_minor, confidence)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [statementId, i, tx.date, tx.description, tx.amountMinor, tx.balanceMinor, tx.confidence ?? null],
       );
     }
 
@@ -292,6 +295,131 @@ export async function setJobExported(id: string, ownerId: string): Promise<Job |
  * Purge jobs past their delete_after deadline. Returns the number removed.
  * DB mode cascades to statements/transactions/issues via FK on delete.
  */
+export interface CorrectionEntry {
+  rowRef: number | null;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+export interface AuditTrail {
+  corrections: Array<CorrectionEntry & { actor: string; at: number }>;
+  events: Array<{ kind: string; detail: Record<string, unknown>; at: number }>;
+}
+
+interface MemAudit {
+  corrections: Map<string, Array<CorrectionEntry & { actor: string; at: number }>>;
+  events: Map<string, Array<{ kind: string; detail: Record<string, unknown>; at: number }>>;
+}
+const ga = globalThis as typeof globalThis & { __plAudit?: MemAudit };
+const memAudit: MemAudit = (ga.__plAudit ??= { corrections: new Map(), events: new Map() });
+
+/** REV-7: every manual change is recorded — who, when, field, before/after. */
+export async function recordCorrections(
+  jobId: string,
+  ownerId: string,
+  actor: string,
+  entries: CorrectionEntry[],
+): Promise<void> {
+  if (entries.length === 0) return;
+  const pool = getPool();
+  if (!pool) {
+    const list = memAudit.corrections.get(jobId) ?? [];
+    for (const e of entries) list.push({ ...e, actor, at: Date.now() });
+    memAudit.corrections.set(jobId, list);
+    return;
+  }
+  for (const e of entries) {
+    await pool.query(
+      `insert into corrections (job_id, owner_id, actor, row_ref, field, old_value, new_value)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [jobId, ownerId, actor, e.rowRef, e.field, e.oldValue, e.newValue],
+    );
+  }
+}
+
+/** SEC-5: exports, unverified confirmations and deletions leave a trace. */
+export async function recordAuditEvent(
+  ownerId: string,
+  jobId: string | null,
+  kind: string,
+  detail: Record<string, unknown>,
+): Promise<void> {
+  const pool = getPool();
+  if (!pool) {
+    const key = jobId ?? '_global';
+    const list = memAudit.events.get(key) ?? [];
+    list.push({ kind, detail, at: Date.now() });
+    memAudit.events.set(key, list);
+    return;
+  }
+  await pool.query(
+    `insert into audit_events (owner_id, job_id, kind, detail) values ($1, $2, $3, $4)`,
+    [ownerId, jobId, kind, JSON.stringify(detail)],
+  );
+}
+
+/** The job's history — corrections and events, newest first. */
+export async function getAuditTrail(jobId: string, ownerId: string): Promise<AuditTrail | null> {
+  const pool = getPool();
+  if (!pool) {
+    const job = mem.get(jobId);
+    if (!job || job.ownerId !== ownerId) return null;
+    return {
+      corrections: [...(memAudit.corrections.get(jobId) ?? [])].reverse(),
+      events: [...(memAudit.events.get(jobId) ?? [])].reverse(),
+    };
+  }
+  const owns = await pool.query(`select id from jobs where id = $1 and owner_id = $2`, [jobId, ownerId]);
+  if (!owns.rows[0]) return null;
+  const corr = await pool.query<{
+    actor: string;
+    row_ref: number | null;
+    field: string;
+    old_value: string | null;
+    new_value: string | null;
+    created_at: string;
+  }>(
+    `select actor, row_ref, field, old_value, new_value, created_at
+     from corrections where job_id = $1 order by created_at desc limit 200`,
+    [jobId],
+  );
+  const events = await pool.query<{ kind: string; detail: Record<string, unknown>; created_at: string }>(
+    `select kind, detail, created_at from audit_events where job_id = $1 order by created_at desc limit 200`,
+    [jobId],
+  );
+  return {
+    corrections: corr.rows.map((r) => ({
+      rowRef: r.row_ref,
+      field: r.field,
+      oldValue: r.old_value,
+      newValue: r.new_value,
+      actor: r.actor,
+      at: new Date(r.created_at).getTime(),
+    })),
+    events: events.rows.map((r) => ({
+      kind: r.kind,
+      detail: r.detail,
+      at: new Date(r.created_at).getTime(),
+    })),
+  };
+}
+
+/** JOB-5: delete a single job (cascades to statement/transactions/issues/corrections). */
+export async function deleteJob(id: string, ownerId: string): Promise<boolean> {
+  const pool = getPool();
+  if (!pool) {
+    const job = mem.get(id);
+    if (!job || job.ownerId !== ownerId) return false;
+    mem.delete(id);
+    memAudit.corrections.delete(id);
+    memAudit.events.delete(id);
+    return true;
+  }
+  const res = await pool.query(`delete from jobs where id = $1 and owner_id = $2`, [id, ownerId]);
+  return (res.rowCount ?? 0) > 0;
+}
+
 /** Wipe every job for an owner (Settings → Data & privacy). Returns count. */
 export async function deleteAllJobs(ownerId: string): Promise<number> {
   const pool = getPool();
@@ -345,12 +473,15 @@ async function loadStatement(pool: Queryable, jobId: string): Promise<ExtractedS
     period_end: string | null;
     opening_balance_minor: string;
     closing_balance_minor: string;
+    balances_missing: boolean;
+    declared_transaction_count: number | null;
   }
   const res = await pool.query<StmtRow>(
     `select id, bank_name, account_holder, account_number, currency,
             to_char(period_start, 'YYYY-MM-DD') as period_start,
             to_char(period_end, 'YYYY-MM-DD') as period_end,
-            opening_balance_minor, closing_balance_minor
+            opening_balance_minor, closing_balance_minor,
+            balances_missing, declared_transaction_count
      from statements where job_id = $1`,
     [jobId],
   );
@@ -362,9 +493,10 @@ async function loadStatement(pool: Queryable, jobId: string): Promise<ExtractedS
     description: string;
     amount_minor: string;
     balance_minor: string | null;
+    confidence: number | null;
   }
   const txRes = await pool.query<TxRow>(
-    `select to_char(tx_date, 'YYYY-MM-DD') as tx_date, description, amount_minor, balance_minor
+    `select to_char(tx_date, 'YYYY-MM-DD') as tx_date, description, amount_minor, balance_minor, confidence
      from transactions where statement_id = $1 order by row_index`,
     [s.id],
   );
@@ -373,6 +505,7 @@ async function loadStatement(pool: Queryable, jobId: string): Promise<ExtractedS
     description: t.description,
     amountMinor: Number(t.amount_minor),
     balanceMinor: t.balance_minor === null ? null : Number(t.balance_minor),
+    ...(t.confidence === null ? {} : { confidence: t.confidence }),
   }));
 
   return {
@@ -384,6 +517,8 @@ async function loadStatement(pool: Queryable, jobId: string): Promise<ExtractedS
     periodEnd: s.period_end,
     openingBalanceMinor: Number(s.opening_balance_minor),
     closingBalanceMinor: Number(s.closing_balance_minor),
+    balancesMissing: s.balances_missing || undefined,
+    declaredTransactionCount: s.declared_transaction_count,
     transactions,
   };
 }

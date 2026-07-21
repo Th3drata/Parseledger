@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getJob, setJobExported } from '@/lib/store';
+import { getJob, setJobExported, recordAuditEvent } from '@/lib/store';
 import { exportStatement, EXPORT_FORMATS } from '@/export';
 import { resolveOwner } from '@/lib/auth';
 
@@ -39,8 +39,17 @@ export async function GET(req: Request, ctx: RouteContext): Promise<Response> {
     );
   }
 
-  const { data, fileName, mime } = await exportStatement(format, job.statement);
+  const unverified = !job.result.verified;
+  const { data, fileName, mime } = await exportStatement(format, job.statement, {
+    unverified,
+    result: job.result,
+  });
   await setJobExported(id, ownerId);
+  // SEC-5 / EXP-7: every export leaves a trace; unverified ones say so loudly.
+  await recordAuditEvent(ownerId, id, unverified ? 'export_unverified' : 'export', {
+    format,
+    fileName,
+  });
 
   const body: BodyInit = typeof data === 'string' ? data : new Uint8Array(data);
   return new Response(body, {
