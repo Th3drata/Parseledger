@@ -10,7 +10,21 @@ import { EXPORT_FORMATS } from '@/export';
 import { VerifiedBadge } from './verified-badge';
 
 type ExportFormat = (typeof EXPORT_FORMATS)[number];
-type EditCol = 'description' | 'amount' | 'balance';
+type EditCol = 'date' | 'description' | 'amount' | 'balance';
+
+interface AuditCorrection {
+  rowRef: number | null;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+  actor: string;
+  at: number;
+}
+interface AuditEvent {
+  kind: string;
+  detail: Record<string, unknown>;
+  at: number;
+}
 
 /** Signed decimal string suitable for an editable input, e.g. -6488 → "-64.88". Integer math only. */
 function minorToInput(minor: number): string {
@@ -38,13 +52,12 @@ function Cell({ display, isEditing, editValue, align, mono, tone, onStart, onCom
   useEffect(() => {
     if (isEditing) {
       setDraft(editValue);
-      // select after mount
       requestAnimationFrame(() => inputRef.current?.select());
     }
   }, [isEditing, editValue]);
 
   const toneClass = tone === 'flag' ? 'text-flag' : tone === 'credit' ? 'text-reconciled' : 'text-ink';
-  const base = `${align === 'right' ? 'text-right' : 'text-left'} ${mono ? 'tnum' : ''} ${toneClass}`;
+  const base = `${align === 'right' ? 'text-right' : 'text-left'} ${mono ? 'tnum whitespace-nowrap' : ''} ${toneClass}`;
 
   if (isEditing) {
     return (
@@ -81,15 +94,19 @@ export function ReviewScreen({
   const [focusIdx, setFocusIdx] = useState<number>(-1);
   const [flashIdx, setFlashIdx] = useState<number>(-1);
   const [confirmingUnverified, setConfirmingUnverified] = useState(false);
+  const [trail, setTrail] = useState<{ corrections: AuditCorrection[]; events: AuditEvent[] } | null>(null);
   const undoStack = useRef<ExtractedStatement[]>([]);
+  const redoStack = useRef<ExtractedStatement[]>([]);
   const rowRefs = useRef<Array<HTMLTableRowElement | null>>([]);
   const wasVerified = useRef<boolean | null>(null);
   const [justCertified, setJustCertified] = useState(false);
 
   const result = useMemo(() => reconcileStatement(statement), [statement]);
   const flagged = useMemo(() => new Set(result.flaggedRows), [result.flaggedRows]);
+  const warned = useMemo(() => new Set(result.warnedRows), [result.warnedRows]);
+  const errorIssues = useMemo(() => result.issues.filter((i) => i.severity === 'error'), [result.issues]);
+  const warningIssues = useMemo(() => result.issues.filter((i) => i.severity === 'warning'), [result.issues]);
   const { currency } = statement;
-  const computedClosing = statement.openingBalanceMinor + result.sumCreditsMinor - result.sumDebitsMinor;
 
   // The certification moment — the stamp lands when the last issue clears.
   useEffect(() => {
@@ -114,6 +131,17 @@ export function ReviewScreen({
     [jobId],
   );
 
+  const loadTrail = useCallback(() => {
+    fetch(`/api/jobs/${jobId}/audit`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { corrections: AuditCorrection[]; events: AuditEvent[] } | null) => setTrail(data))
+      .catch(() => setTrail(null));
+  }, [jobId]);
+
+  useEffect(() => {
+    loadTrail();
+  }, [loadTrail]);
+
   const firstRender = useRef(true);
   useEffect(() => {
     if (firstRender.current) {
@@ -121,21 +149,32 @@ export function ReviewScreen({
       return;
     }
     const timer = setTimeout(() => {
-      save(statement).catch(() => toast.error('Could not save your changes.'));
+      save(statement)
+        .then(loadTrail)
+        .catch(() => toast.error('Could not save your changes.'));
     }, 700);
     return () => clearTimeout(timer);
-  }, [statement, save]);
+  }, [statement, save, loadTrail]);
 
-  const applyEdit = useCallback((index: number, patch: Partial<ExtractedStatement['transactions'][number]>) => {
+  /** Every mutation flows through here: pushes undo, clears redo. */
+  const applyStatement = useCallback((mutate: (prev: ExtractedStatement) => ExtractedStatement) => {
     setStatement((prev) => {
       undoStack.current.push(prev);
       if (undoStack.current.length > 30) undoStack.current.shift();
-      return {
-        ...prev,
-        transactions: prev.transactions.map((t, i) => (i === index ? { ...t, ...patch } : t)),
-      };
+      redoStack.current = [];
+      return mutate(prev);
     });
   }, []);
+
+  const applyEdit = useCallback(
+    (index: number, patch: Partial<ExtractedStatement['transactions'][number]>) => {
+      applyStatement((prev) => ({
+        ...prev,
+        transactions: prev.transactions.map((t, i) => (i === index ? { ...t, ...patch } : t)),
+      }));
+    },
+    [applyStatement],
+  );
 
   const undo = useCallback(() => {
     const prev = undoStack.current.pop();
@@ -143,18 +182,42 @@ export function ReviewScreen({
       toast.message('Nothing to undo.');
       return;
     }
-    setStatement(prev);
+    setStatement((cur) => {
+      redoStack.current.push(cur);
+      return prev;
+    });
     toast.message('Edit undone.');
+  }, []);
+
+  const redo = useCallback(() => {
+    const next = redoStack.current.pop();
+    if (!next) {
+      toast.message('Nothing to redo.');
+      return;
+    }
+    setStatement((cur) => {
+      undoStack.current.push(cur);
+      return next;
+    });
+    toast.message('Edit redone.');
   }, []);
 
   const commitCell = useCallback(
     (row: number, col: EditCol, raw: string) => {
       setEditing(null);
+      const trimmed = raw.trim();
       if (col === 'description') {
         applyEdit(row, { description: raw });
         return;
       }
-      const trimmed = raw.trim();
+      if (col === 'date') {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+          toast.error(`Dates are YYYY-MM-DD — got "${raw}".`);
+          return;
+        }
+        applyEdit(row, { date: trimmed });
+        return;
+      }
       if (col === 'balance' && (trimmed === '' || trimmed === '—')) {
         applyEdit(row, { balanceMinor: null });
         return;
@@ -169,6 +232,61 @@ export function ReviewScreen({
     [applyEdit],
   );
 
+  // ——— Row operations (REV-4) ———
+  const addRow = useCallback(
+    (after: number) => {
+      applyStatement((prev) => {
+        const at = after >= 0 ? after + 1 : prev.transactions.length;
+        const neighbour = prev.transactions[Math.min(after < 0 ? prev.transactions.length - 1 : after, prev.transactions.length - 1)];
+        const row = {
+          date: neighbour?.date ?? prev.periodStart ?? '2026-01-01',
+          description: 'New transaction',
+          amountMinor: 0,
+          balanceMinor: null,
+        };
+        const next = [...prev.transactions];
+        next.splice(at, 0, row);
+        return { ...prev, transactions: next };
+      });
+      setFocusIdx(after >= 0 ? after + 1 : statement.transactions.length);
+    },
+    [applyStatement, statement.transactions.length],
+  );
+
+  const deleteRow = useCallback(
+    (index: number) => {
+      applyStatement((prev) => ({
+        ...prev,
+        transactions: prev.transactions.filter((_, i) => i !== index),
+      }));
+      setFocusIdx((f) => Math.min(f, statement.transactions.length - 2));
+      toast.message('Row deleted — U to undo.');
+    },
+    [applyStatement, statement.transactions.length],
+  );
+
+  const duplicateRow = useCallback(
+    (index: number) => {
+      applyStatement((prev) => {
+        const src = prev.transactions[index];
+        if (!src) return prev;
+        const next = [...prev.transactions];
+        next.splice(index + 1, 0, { ...src });
+        return { ...prev, transactions: next };
+      });
+    },
+    [applyStatement],
+  );
+
+  const toggleDirection = useCallback(
+    (index: number) => {
+      const tx = statement.transactions[index];
+      if (!tx) return;
+      applyEdit(index, { amountMinor: -tx.amountMinor });
+    },
+    [applyEdit, statement.transactions],
+  );
+
   const goToRow = useCallback((i: number) => {
     setFocusIdx(i);
     setFlashIdx(i);
@@ -176,7 +294,21 @@ export function ReviewScreen({
     setTimeout(() => setFlashIdx((cur) => (cur === i ? -1 : cur)), 1700);
   }, []);
 
-  // ——— Keyboard register: j/k rows · enter edit amount · u undo ———
+  const attentionRows = useMemo(
+    () => [...new Set([...result.flaggedRows, ...result.warnedRows])].sort((a, b) => a - b),
+    [result.flaggedRows, result.warnedRows],
+  );
+
+  const nextFlag = useCallback(() => {
+    if (attentionRows.length === 0) {
+      toast.message('Nothing flagged.');
+      return;
+    }
+    const next = attentionRows.find((i) => i > focusIdx) ?? attentionRows[0];
+    if (next !== undefined) goToRow(next);
+  }, [attentionRows, focusIdx, goToRow]);
+
+  // ——— Keyboard register (REV-6): j/k rows · enter edit · n next flag · u/z undo · shift+z redo ———
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -185,7 +317,8 @@ export function ReviewScreen({
       if (typing) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
-        undo();
+        if (e.shiftKey) redo();
+        else undo();
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -204,13 +337,15 @@ export function ReviewScreen({
       } else if (e.key === 'Enter' && focusIdx >= 0) {
         e.preventDefault();
         setEditing({ row: focusIdx, col: 'amount' });
+      } else if (key === 'n') {
+        nextFlag();
       } else if (key === 'u') {
         undo();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [focusIdx, statement.transactions.length, undo]);
+  }, [focusIdx, statement.transactions.length, undo, redo, nextFlag]);
 
   const download = useCallback(
     async (format: ExportFormat, unverified: boolean) => {
@@ -223,11 +358,19 @@ export function ReviewScreen({
       const params = new URLSearchParams({ format: format.id });
       if (unverified) params.set('unverified', '1');
       window.location.href = `/api/jobs/${jobId}/export?${params.toString()}`;
+      setTimeout(loadTrail, 1500);
     },
-    [jobId, save, statement],
+    [jobId, save, statement, loadTrail],
   );
 
-  const issueCount = result.issues.length;
+  const errorCount = errorIssues.length;
+  const badge = result.verified ? (
+    <VerifiedBadge state="reconciled" label="Verified to the cent" />
+  ) : errorCount > 0 ? (
+    <VerifiedBadge state="flag" label={`${errorCount} issue${errorCount === 1 ? '' : 's'} — doesn't balance`} />
+  ) : (
+    <VerifiedBadge state="caution" label="Needs review" />
+  );
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -249,26 +392,40 @@ export function ReviewScreen({
               <span className="tnum text-ink-soft">{formatDate(statement.periodEnd)}</span>
             </p>
           </div>
-          <p className="text-caption text-ash">
-            <span className="kbd">J</span> <span className="kbd">K</span> rows · <span className="kbd">↵</span> edit ·{' '}
-            <span className="kbd">U</span> undo
-          </p>
+          <div className="flex items-center gap-3">
+            {attentionRows.length > 0 ? (
+              <button
+                type="button"
+                onClick={nextFlag}
+                className="rounded-buttons border border-hairline px-3 py-1.5 text-body-sm font-medium text-ink hover:bg-ledger"
+              >
+                Next flag <span className="kbd">N</span>
+              </button>
+            ) : null}
+            <p className="text-caption text-ash">
+              <span className="kbd">J</span> <span className="kbd">K</span> rows · <span className="kbd">↵</span> edit ·{' '}
+              <span className="kbd">U</span> undo · <span className="kbd">⇧⌘Z</span> redo
+            </p>
+          </div>
         </header>
 
-        <div className="overflow-x-auto rounded-cards border border-hairline" data-lenis-prevent>
+        <div className="overflow-x-auto rounded-cards border border-hairline">
           <table className="w-full text-body-sm">
             <thead>
               <tr className="border-b border-iron bg-ledger text-left">
                 <th scope="col" className="w-7 pb-2 pt-2" />
                 <th scope="col" className="px-3 py-2 text-caption font-semibold uppercase tracking-wide text-slate">Date</th>
                 <th scope="col" className="px-3 py-2 text-caption font-semibold uppercase tracking-wide text-slate">Description</th>
+                <th scope="col" className="w-8 px-1 py-2 text-caption font-semibold uppercase tracking-wide text-slate"><span className="sr-only">Direction</span>±</th>
                 <th scope="col" className="px-3 py-2 text-right text-caption font-semibold uppercase tracking-wide text-slate">Amount</th>
                 <th scope="col" className="hidden px-3 py-2 text-right text-caption font-semibold uppercase tracking-wide text-slate sm:table-cell">Balance</th>
+                <th scope="col" className="w-14 px-1 py-2"><span className="sr-only">Row actions</span></th>
               </tr>
             </thead>
             <tbody>
               {statement.transactions.map((tx, i) => {
                 const isFlagged = flagged.has(i);
+                const isWarned = warned.has(i) && !isFlagged;
                 const isFocused = focusIdx === i;
                 return (
                   <tr
@@ -277,16 +434,38 @@ export function ReviewScreen({
                       rowRefs.current[i] = el;
                     }}
                     onClick={() => setFocusIdx(i)}
-                    className={`border-b border-hairline transition-colors last:border-0 ${
-                      isFlagged ? 'border-l-2 border-l-flag bg-flag-wash' : 'odd:bg-paper even:bg-ledger'
+                    className={`group border-b border-hairline transition-colors last:border-0 ${
+                      isFlagged
+                        ? 'border-l-2 border-l-flag bg-flag-wash'
+                        : isWarned
+                          ? 'border-l-2 border-l-caution bg-caution-wash'
+                          : 'odd:bg-paper even:bg-ledger'
                     } ${isFocused ? 'outline outline-1 -outline-offset-1 outline-ink' : ''} ${
                       flashIdx === i ? 'row-flash' : ''
                     }`}
                   >
-                    <td className="px-2 py-1.5 text-center text-flag" aria-hidden>
-                      {isFlagged ? '⚑' : ''}
+                    <td className="px-2 py-1.5 text-center">
+                      {isFlagged ? (
+                        <span className="text-flag" aria-label="Error on this row">⚑</span>
+                      ) : isWarned ? (
+                        <span aria-label="Review this row" className="inline-block h-1.5 w-1.5 rounded-full bg-caution" />
+                      ) : null}
                     </td>
-                    <td className="tnum whitespace-nowrap px-3 py-1.5 text-slate">{formatDate(tx.date)}</td>
+                    <td className="whitespace-nowrap px-3 py-1.5">
+                      <Cell
+                        display={formatDate(tx.date)}
+                        isEditing={editing?.row === i && editing.col === 'date'}
+                        editValue={tx.date}
+                        align="left"
+                        mono
+                        onStart={() => {
+                          setFocusIdx(i);
+                          setEditing({ row: i, col: 'date' });
+                        }}
+                        onCommit={(raw) => commitCell(i, 'date', raw)}
+                        onCancel={() => setEditing(null)}
+                      />
+                    </td>
                     <td className="px-3 py-1.5">
                       <Cell
                         display={tx.description}
@@ -300,6 +479,19 @@ export function ReviewScreen({
                         onCommit={(raw) => commitCell(i, 'description', raw)}
                         onCancel={() => setEditing(null)}
                       />
+                    </td>
+                    <td className="px-1 py-1.5 text-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleDirection(i)}
+                        title="Flip debit/credit"
+                        aria-label={`Flip direction for row ${i + 1} (currently ${tx.amountMinor >= 0 ? 'credit' : 'debit'})`}
+                        className={`tnum rounded-tags px-1 py-0.5 text-caption font-semibold hover:bg-mist ${
+                          tx.amountMinor >= 0 ? 'text-reconciled' : 'text-slate'
+                        }`}
+                      >
+                        {tx.amountMinor >= 0 ? 'Cr' : 'Dr'}
+                      </button>
                     </td>
                     <td className="px-3 py-1.5">
                       <Cell
@@ -332,55 +524,121 @@ export function ReviewScreen({
                         onCancel={() => setEditing(null)}
                       />
                     </td>
+                    <td className="px-1 py-1.5 text-right">
+                      <span className="inline-flex gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => duplicateRow(i)}
+                          title="Duplicate row"
+                          aria-label={`Duplicate row ${i + 1}`}
+                          className="rounded-tags px-1 text-caption text-ash hover:bg-mist hover:text-ink"
+                        >
+                          ⧉
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteRow(i)}
+                          title="Delete row"
+                          aria-label={`Delete row ${i + 1}`}
+                          className="rounded-tags px-1 text-caption text-ash hover:bg-flag-wash hover:text-flag"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+
+        <div className="mt-3 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => addRow(focusIdx)}
+            className="rounded-buttons border border-hairline px-3 py-1.5 text-body-sm font-medium text-ink hover:bg-ledger"
+          >
+            + Add row
+          </button>
+          <p className="tnum text-caption text-ash">
+            {statement.transactions.length} rows
+            {statement.declaredTransactionCount != null ? ` · statement declares ${statement.declaredTransactionCount}` : ''}
+          </p>
+        </div>
+
+        {/* ——— History (REV-7): corrections + export events ——— */}
+        {trail && (trail.corrections.length > 0 || trail.events.length > 0) ? (
+          <section className="mt-8">
+            <h2 className="text-caption font-semibold uppercase tracking-wide text-slate">History</h2>
+            <ul className="mt-2 divide-y divide-hairline rounded-cards border border-hairline">
+              {trail.events.slice(0, 10).map((e, i) => (
+                <li key={`e${i}`} className="flex items-baseline justify-between gap-3 px-3 py-2">
+                  <span className={`text-caption ${e.kind === 'export_unverified' ? 'text-caution' : 'text-slate'}`}>
+                    {e.kind === 'export_unverified' ? 'Exported UNVERIFIED' : 'Exported'}{' '}
+                    <span className="tnum text-ink-soft">{String(e.detail.format ?? '')}</span>
+                  </span>
+                  <span className="tnum shrink-0 text-caption text-ash">
+                    {new Date(e.at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </li>
+              ))}
+              {trail.corrections.slice(0, 15).map((c, i) => (
+                <li key={`c${i}`} className="flex items-baseline justify-between gap-3 px-3 py-2">
+                  <span className="min-w-0 truncate text-caption text-slate">
+                    {c.rowRef !== null ? `Row ${c.rowRef + 1} · ` : ''}
+                    {c.field}: <span className="tnum text-flag">{c.oldValue ?? '—'}</span> →{' '}
+                    <span className="tnum text-reconciled">{c.newValue ?? '—'}</span>
+                  </span>
+                  <span className="tnum shrink-0 text-caption text-ash">
+                    {new Date(c.at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
 
       {/* ——— Rail: the verification instrument ——— */}
       <aside className="lg:sticky lg:top-8 lg:self-start">
         <div className="relative overflow-hidden rounded-cards border border-hairline">
           <div className="border-b border-hairline bg-ledger px-4 py-3" aria-live="polite">
-            {result.verified ? (
-              <VerifiedBadge state="reconciled" label="Verified to the cent" />
-            ) : (
-              <VerifiedBadge state="flag" label={`${issueCount} issue${issueCount === 1 ? '' : 's'} — doesn't balance`} />
-            )}
+            {badge}
           </div>
 
           {/* The identity, stacked */}
           <dl className="space-y-2 px-4 py-4">
             {[
-              ['Opening', statement.openingBalanceMinor, 'text-ink'],
-              ['+ Credits', result.sumCreditsMinor, 'text-ink'],
-              ['− Debits', result.sumDebitsMinor, 'text-ink'],
-            ].map(([label, minor, cls]) => (
+              ['Opening', statement.openingBalanceMinor],
+              ['+ Credits', result.sumCreditsMinor],
+              ['− Debits', result.sumDebitsMinor],
+            ].map(([label, minor]) => (
               <div key={String(label)} className="flex items-baseline justify-between gap-3">
                 <dt className="tnum text-caption uppercase text-slate">{label}</dt>
-                <dd className={`tnum text-figure ${String(cls)}`}>{formatMinor(Number(minor), currency)}</dd>
+                <dd className="tnum text-figure text-ink">{formatMinor(Number(minor), currency)}</dd>
               </div>
             ))}
             <div className="flex items-baseline justify-between gap-3 border-t border-iron pt-2">
               <dt className="tnum text-caption uppercase text-slate">= Computed</dt>
-              <dd className={`tnum figure-glow text-figure ${result.verified ? 'text-reconciled' : 'text-flag'}`}>
-                {formatMinor(computedClosing, currency)}
+              <dd className={`tnum figure-glow text-figure ${result.verified ? 'text-reconciled' : errorIssues.length > 0 ? 'text-flag' : 'text-caution'}`}>
+                {formatMinor(result.computedClosingMinor, currency)}
               </dd>
             </div>
             <div className="flex items-baseline justify-between gap-3">
               <dt className="tnum text-caption uppercase text-slate">Printed closing</dt>
-              <dd className="tnum text-figure text-ink">{formatMinor(statement.closingBalanceMinor, currency)}</dd>
+              <dd className="tnum text-figure text-ink">
+                {statement.balancesMissing ? '—' : formatMinor(statement.closingBalanceMinor, currency)}
+              </dd>
             </div>
           </dl>
 
-          {/* Issues — each one is a door to its row */}
-          {issueCount > 0 ? (
+          {/* Issues — errors first, then review warnings; each is a door to its row */}
+          {errorIssues.length > 0 ? (
             <div className="border-t border-hairline px-4 py-3">
-              <p className="text-caption font-semibold uppercase tracking-wide text-slate">Issues</p>
+              <p className="text-caption font-semibold uppercase tracking-wide text-flag">Errors</p>
               <ul className="mt-2 space-y-1.5">
-                {result.issues.map((issue, i) => (
+                {errorIssues.map((issue, i) => (
                   <li key={i}>
                     {issue.rowIndex === null ? (
                       <p className="text-caption leading-relaxed text-flag">{issue.message}</p>
@@ -389,6 +647,28 @@ export function ReviewScreen({
                         type="button"
                         onClick={() => goToRow(issue.rowIndex as number)}
                         className="w-full rounded-tags px-1.5 py-1 text-left text-caption leading-relaxed text-flag hover:bg-flag-wash"
+                      >
+                        {issue.message} <span className="text-ash">→</span>
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {warningIssues.length > 0 ? (
+            <div className="border-t border-hairline px-4 py-3">
+              <p className="text-caption font-semibold uppercase tracking-wide text-caution">Review</p>
+              <ul className="mt-2 space-y-1.5">
+                {warningIssues.map((issue, i) => (
+                  <li key={i}>
+                    {issue.rowIndex === null ? (
+                      <p className="text-caption leading-relaxed text-caution">{issue.message}</p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => goToRow(issue.rowIndex as number)}
+                        className="w-full rounded-tags px-1.5 py-1 text-left text-caption leading-relaxed text-caution hover:bg-caution-wash"
                       >
                         {issue.message} <span className="text-ash">→</span>
                       </button>
@@ -430,7 +710,9 @@ export function ReviewScreen({
               </div>
             ) : (
               <div className="mt-2 space-y-2">
-                <p className="text-caption text-flag">This statement does not reconcile. Export as:</p>
+                <p className="text-caption text-flag">
+                  This statement is not verified. The export is watermarked UNVERIFIED and the choice is logged. Export as:
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   {EXPORT_FORMATS.map((format) => (
                     <button
