@@ -98,7 +98,12 @@ const IMAGE_TYPES: Record<string, 'image/png' | 'image/jpeg' | 'image/webp'> = {
 /** True when the PDF has a usable native text layer (cheap text path); false → vision. */
 async function pdfHasTextLayer(filePath: string): Promise<string | null> {
   try {
-    const { stdout } = await execFileAsync('pdftotext', ['-layout', filePath, '-']);
+    // Bound a crafted PDF that makes pdftotext hang or spew: cap runtime and
+    // output so it can't stall the request up to maxDuration or exhaust memory.
+    const { stdout } = await execFileAsync('pdftotext', ['-layout', filePath, '-'], {
+      timeout: 10_000,
+      maxBuffer: 8 * 1024 * 1024,
+    });
     // ponytail: crude threshold; a scanned PDF yields ~no text, a native one yields plenty
     return stdout.replace(/\s/g, '').length > 300 ? stdout : null;
   } catch {

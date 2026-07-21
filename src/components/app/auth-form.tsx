@@ -91,10 +91,16 @@ function oauthErrorCopy(error: string): string {
   return 'The sign-in provider returned an error before finishing. Nothing happened — try again, or use email and password.';
 }
 
+/** Only same-site relative paths — never an absolute/protocol-relative URL. */
+function safeNext(raw: string | null): string {
+  if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  return '/app';
+}
+
 function AuthFormInner({ mode, providers }: { mode: Mode; providers: SocialProviders }) {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get('next') ?? '/app';
+  const next = safeNext(params.get('next'));
   const urlError = params.get('error');
 
   const [name, setName] = useState('');

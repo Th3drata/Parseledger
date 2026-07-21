@@ -60,7 +60,14 @@ async function normaliseImage(bytes: Uint8Array, mime: string): Promise<{ bytes:
     mime = 'image/jpeg';
   }
   const { default: sharp } = await import('sharp');
-  const rotated = await sharp(Buffer.from(bytes)).rotate().toBuffer();
+  // Decompression-bomb guard: 50 MP is far above any real statement scan
+  // (a 300dpi A4 page ≈ 8.7 MP) but well below the pixel counts a tiny
+  // crafted PNG/WEBP can inflate to. sharp throws past the cap instead of
+  // allocating gigabytes. ponytail: heic-convert has no equivalent guard —
+  // residual bomb risk on HEIC is bounded by the 25 MB upload cap upstream.
+  const rotated = await sharp(Buffer.from(bytes), { limitInputPixels: 50_000_000 })
+    .rotate()
+    .toBuffer();
   return { bytes: new Uint8Array(rotated), ext: mime === 'image/png' ? '.png' : mime === 'image/webp' ? '.webp' : '.jpg' };
 }
 

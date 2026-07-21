@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-07-21T22:30:56.438Z",
+  "target": ".",
+  "depth": "full",
+  "type": "all",
+  "summary": {
+    "critical": 0,
+    "high": 2,
+    "medium": 4,
+    "low": 0,
+    "total": 6
+  },
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "type": "Dependency CVE",
+      "location": "package.json:exceljs",
+      "description": "Vulnerability"
+    },
+    {
+      "severity": "HIGH",
+      "type": "Dependency CVE",
+      "location": "package.json:next",
+      "description": "Vulnerability"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Dependency CVE",
+      "location": "package.json:postcss",
+      "description": "PostCSS has XSS via Unescaped </sty"
+    },
+    {
+      "severity": "HIGH",
+      "type": "Dependency CVE",
+      "location": "package.json:sharp",
+      "description": "sharp inherited vulnerabilities in "
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "Dependency CVE",
+      "location": "package.json:uuid",
+      "description": "uuid: Missing buffer bounds check i"
+    },
+    {
+      "severity": "MEDIUM",
+      "type": "React XSS",
+      "location": "src/app/(marketing)/page.tsx:696",
+      "description": "React XSS risk"
+    }
+  ]
+}

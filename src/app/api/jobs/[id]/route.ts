@@ -25,7 +25,10 @@ const statementSchema = z.object({
   closingBalanceMinor: z.number().int(),
   balancesMissing: z.boolean().optional(),
   declaredTransactionCount: z.number().int().nullable().optional(),
-  transactions: z.array(transactionSchema),
+  // Cap the row count: setJobStatement runs one INSERT per row in a txn, so an
+  // unbounded array is a memory + query-fan-out DoS. 10k dwarfs any real
+  // statement (100-page upload cap ≈ a few thousand rows).
+  transactions: z.array(transactionSchema).max(10_000),
 });
 
 const patchSchema = z.object({ statement: statementSchema });

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth';
 import { billingEnabled, getStripe, ensureCustomer } from '@/lib/billing';
-import { PAYG } from '@/lib/plans';
+import { PAYG, tierForPriceId } from '@/lib/plans';
 
 export const runtime = 'nodejs';
 
@@ -37,8 +37,14 @@ export async function POST(req: Request): Promise<Response> {
   }
   const { priceId, quantity } = parsed.data;
 
-  const customerId = await ensureCustomer(session.userId, null);
+  // Allowlist: only our own configured plan or PAYG prices. Otherwise a caller
+  // could open checkout against an arbitrary/test Stripe price.
   const isPayg = priceId === process.env[PAYG.priceEnv];
+  if (!isPayg && tierForPriceId(priceId) === null) {
+    return NextResponse.json({ error: 'Unknown price.' }, { status: 400 });
+  }
+
+  const customerId = await ensureCustomer(session.userId, null);
   const base = origin(req);
 
   const checkout = await stripe.checkout.sessions.create({

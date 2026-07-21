@@ -79,6 +79,23 @@ function buildAuth() {
     database: pool,
     secret,
     baseURL,
+    // Persisted in Postgres — the default in-memory limiter resets on every
+    // serverless cold start, so it never actually throttles. Tight windows on
+    // the endpoints worth abusing: credential brute force and email bombing.
+    rateLimit: {
+      enabled: true,
+      storage: 'database',
+      window: 60,
+      max: 100,
+      customRules: {
+        '/sign-in/email': { window: 60, max: 5 },
+        '/sign-up/email': { window: 60, max: 5 },
+        '/send-verification-email': { window: 300, max: 3 },
+        '/request-password-reset': { window: 300, max: 3 },
+        '/forget-password': { window: 300, max: 3 },
+        '/reset-password': { window: 300, max: 5 },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
@@ -116,7 +133,13 @@ function buildAuth() {
         afterDelete: async (user) => {
           const p = getPool();
           if (!p) return;
+          // audit_events.job_id is ON DELETE SET NULL, so these rows outlive the
+          // job delete — purge by owner explicitly, or personal data survives
+          // "delete everything". corrections cascade via jobs, deleted by owner
+          // too as a belt-and-suspenders against any orphan.
           await p.query('delete from jobs where owner_id = $1', [user.id]);
+          await p.query('delete from audit_events where owner_id = $1', [user.id]);
+          await p.query('delete from corrections where owner_id = $1', [user.id]);
           await p.query('delete from usage_events where owner_id = $1', [user.id]);
           await p.query('delete from clients where owner_id = $1', [user.id]);
           await p.query('delete from subscriptions where owner_id = $1', [user.id]);

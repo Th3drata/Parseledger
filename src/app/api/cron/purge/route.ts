@@ -12,7 +12,13 @@ export const runtime = 'nodejs';
  */
 export async function GET(req: Request): Promise<Response> {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
+  // Fail closed: on a real (DB-backed) deployment, refuse to run unprotected.
+  // Only the local in-memory mode (no DATABASE_URL) may purge without a secret.
+  if (!secret) {
+    if (process.env.DATABASE_URL) {
+      return NextResponse.json({ error: 'Purge endpoint not configured.' }, { status: 503 });
+    }
+  } else {
     const header = req.headers.get('authorization');
     const provided = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : '';
     const a = Buffer.from(provided);

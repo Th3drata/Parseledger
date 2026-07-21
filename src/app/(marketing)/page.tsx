@@ -702,7 +702,7 @@ export default function LandingPage() {
               name: item.q,
               acceptedAnswer: { '@type': 'Answer', text: item.a },
             })),
-          }),
+          }).replace(/</g, '\\u003c'),
         }}
       />
     </>

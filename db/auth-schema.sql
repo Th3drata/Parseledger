@@ -55,6 +55,28 @@ create table if not exists "verification" (
   "updatedAt"  timestamptz not null default now()
 );
 
+-- Persisted rate-limit counters (better-auth rateLimit storage: 'database').
+create table if not exists "rateLimit" (
+  "id"          text primary key,
+  "key"         text,
+  "count"       integer,
+  "lastRequest" bigint
+);
+
 create index if not exists "session_userId_idx" on "session" ("userId");
 create index if not exists "account_userId_idx" on "account" ("userId");
 create index if not exists "verification_identifier_idx" on "verification" ("identifier");
+
+-- These tables hold password hashes, live session tokens and OAuth tokens.
+-- better-auth reaches them over the direct Postgres connection (service role),
+-- never PostgREST — but Supabase auto-exposes every public-schema table to the
+-- anon role by default, so lock them down: enable RLS (no policies = deny all
+-- to anon/authenticated) and revoke the implicit grants. Mirrors db/schema.sql.
+alter table "user" enable row level security;
+alter table "session" enable row level security;
+alter table "account" enable row level security;
+alter table "verification" enable row level security;
+alter table "rateLimit" enable row level security;
+
+revoke all on "user", "session", "account", "verification", "rateLimit"
+  from anon, authenticated;
