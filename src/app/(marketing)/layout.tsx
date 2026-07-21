@@ -28,11 +28,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               <NavLink href="/pricing" label="Pricing" />
               <NavLink href="/security" label="Security" />
             </nav>
-            {/* Statut diégétique — la promesse en mono, toujours à l'écran */}
-            <p className="tnum hidden items-center gap-2 px-6 text-caption text-ash xl:flex" aria-hidden>
-              <span className="h-1.5 w-1.5 rounded-full bg-reconciled" />
-              opening + credits − debits = closing
-            </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -69,7 +64,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
                 Verified to the cent.
               </p>
             </div>
-            <p className="tnum text-body-sm text-ash">opening + credits − debits = closing</p>
           </div>
 
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">

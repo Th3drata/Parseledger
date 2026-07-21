@@ -12,6 +12,19 @@ export function authEnabled(): boolean {
   return Boolean(process.env.BETTER_AUTH_SECRET) && getPool() !== null;
 }
 
+export interface SocialProviders {
+  google: boolean;
+  apple: boolean;
+}
+
+/** Which third-party sign-in buttons the auth pages should render. */
+export function enabledSocialProviders(): SocialProviders {
+  return {
+    google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    apple: Boolean(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET),
+  };
+}
+
 /**
  * Password-reset delivery: Resend when a key is configured, console otherwise
  * (the link still works — copy it from the server logs in development).
@@ -42,6 +55,21 @@ function buildAuth() {
   const baseURL = process.env.BETTER_AUTH_URL;
   const onProdDomain = Boolean(baseURL?.includes('parseledger.co'));
 
+  // Third-party sign-in — each provider activates when its credentials exist.
+  const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {};
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    socialProviders.google = {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    };
+  }
+  if (process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET) {
+    socialProviders.apple = {
+      clientId: process.env.APPLE_CLIENT_ID,
+      clientSecret: process.env.APPLE_CLIENT_SECRET,
+    };
+  }
+
   return betterAuth({
     database: pool,
     secret,
@@ -67,6 +95,7 @@ function buildAuth() {
         },
       },
     },
+    socialProviders,
     trustedOrigins: [
       'https://parseledger.co',
       'https://www.parseledger.co',

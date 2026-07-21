@@ -119,9 +119,9 @@ export default function LandingPage() {
           <Reveal delay={0.35} y={16}>
             <p className="mt-6 max-w-2xl text-body-lg text-slate">
               Parseledger turns PDFs and photos of bank statements into accounting-ready CSV,
-              Excel, QuickBooks and Xero files — then proves every figure with the same identity
-              an auditor would use: <span className="tnum text-ink-soft">opening + credits − debits = closing</span>.
-              Nothing is exported on trust.
+              Excel, QuickBooks and Xero files — and proves every figure against the
+              statement&apos;s own arithmetic before you're asked to trust it. Nothing is
+              exported on faith.
             </p>
           </Reveal>
           <Reveal delay={0.5} y={16}>

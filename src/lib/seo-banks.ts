@@ -164,7 +164,7 @@ export const COMPETITORS: Competitor[] = [
     slug: 'bankstatementconverter',
     name: 'BankStatementConverter',
     angle:
-      'BankStatementConverter parses statements into spreadsheets. Parseledger parses and then proves the result: every export must satisfy opening + credits − debits = closing, with row-level running-balance checks, before it earns the Verified badge. Add UK/IE bank depth and flat pricing.',
+      'BankStatementConverter parses statements into spreadsheets. Parseledger parses and then proves the result: every export must reconcile to the statement’s own closing balance, with row-level running-balance checks, before it earns the Verified badge. Add UK/IE bank depth and flat pricing.',
   },
   {
     slug: 'docuclipper',

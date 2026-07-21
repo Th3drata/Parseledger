@@ -30,8 +30,7 @@ export function FormatHub({
             <p className="mt-5 text-body text-slate">{format.blurb}</p>
             <p className="mt-3 text-body text-slate">
               Before any file leaves Parseledger, the extracted figures must reconcile against the
-              statement&apos;s own balances — <span className="tnum text-ink-soft">opening + credits − debits =
-              closing</span>, checked line by line. What you import into {format.name} is provably
+              statement&apos;s own balances — the statement&apos;s own balances, checked line by line. What you import into {format.name} is provably
               consistent with the paper.
             </p>
           </Reveal>

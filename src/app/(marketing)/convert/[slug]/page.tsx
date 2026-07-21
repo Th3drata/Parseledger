@@ -48,7 +48,7 @@ function buildFaq(bank: Bank, format: ExportFormat): Faq[] {
   return [
     {
       q: `Does it work with scanned or photographed ${bank.name} statements?`,
-      a: `Yes. Parseledger reads text PDFs, scans and phone photos of ${bank.name} statements. Whatever the source, the same rule applies: the extracted figures must satisfy opening + credits − debits = closing and pass line-by-line running-balance checks before the statement is marked Verified. A blurry scan cannot silently corrupt your numbers — a misread digit is flagged, not exported.`,
+      a: `Yes. Parseledger reads text PDFs, scans and phone photos of ${bank.name} statements. Whatever the source, the same rule applies: the extracted rows must reconcile to the closing balance the statement itself prints, or the row at fault is flagged. A blurry scan cannot silently corrupt your numbers — a misread digit is flagged, not exported.`,
     },
     {
       q: `Can it handle multi-page ${bank.name} statements?`,
@@ -107,7 +107,7 @@ export default async function ConvertPage({ params }: PageProps) {
             <p className="mt-5 text-body text-slate">{bank.blurb}</p>
             <p className="mt-3 text-body text-slate">
               Parseledger turns those statements into {format.name}-ready data and proves the
-              result reconciles — <span className="tnum text-ink-soft">opening + credits − debits = closing</span>,
+              result reconciles to the statement&apos;s own closing balance,
               checked to the cent — before you import a single row.
             </p>
           </Reveal>

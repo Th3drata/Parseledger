@@ -57,7 +57,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               Engine ready
             </p>
           )}
-          <p className="tnum text-caption text-ash">opening + credits − debits = closing</p>
           {user ? <UserMenu name={user.name} email={user.email} /> : null}
         </div>
       </aside>
