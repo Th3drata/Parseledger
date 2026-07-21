@@ -10,6 +10,7 @@ const transactionSchema = z.object({
   description: z.string(),
   amountMinor: z.number().int(),
   balanceMinor: z.number().int().nullable(),
+  confidence: z.number().min(0).max(1).optional(),
 });
 
 const statementSchema = z.object({
@@ -21,6 +22,8 @@ const statementSchema = z.object({
   periodEnd: z.string().nullable(),
   openingBalanceMinor: z.number().int(),
   closingBalanceMinor: z.number().int(),
+  balancesMissing: z.boolean().optional(),
+  declaredTransactionCount: z.number().int().nullable().optional(),
   transactions: z.array(transactionSchema),
 });
 

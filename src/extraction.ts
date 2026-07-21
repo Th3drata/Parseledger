@@ -27,7 +27,8 @@ export const EXTRACTION_JSON_SCHEMA = {
   additionalProperties: false,
   required: [
     'bankName', 'accountHolder', 'accountNumber', 'currency',
-    'periodStart', 'periodEnd', 'openingBalance', 'closingBalance', 'transactions',
+    'periodStart', 'periodEnd', 'openingBalance', 'closingBalance',
+    'declaredTransactionCount', 'transactions',
   ],
   properties: {
     bankName: { type: 'string' },
@@ -36,20 +37,22 @@ export const EXTRACTION_JSON_SCHEMA = {
     currency: { type: 'string', description: 'ISO 4217 code, e.g. GBP, EUR' },
     periodStart: { type: ['string', 'null'], description: 'ISO date yyyy-mm-dd' },
     periodEnd: { type: ['string', 'null'], description: 'ISO date yyyy-mm-dd' },
-    openingBalance: { type: 'string', description: 'Raw opening balance as printed, e.g. "1,234.56"' },
-    closingBalance: { type: 'string', description: 'Raw closing balance as printed' },
+    openingBalance: { type: ['string', 'null'], description: 'Raw opening balance as printed, e.g. "1,234.56"; null ONLY if the statement truly prints no opening balance' },
+    closingBalance: { type: ['string', 'null'], description: 'Raw closing balance as printed; null ONLY if truly absent' },
+    declaredTransactionCount: { type: ['integer', 'null'], description: 'Number of transactions the statement itself declares (e.g. "24 transactions"), or null if not printed' },
     transactions: {
       type: 'array',
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['date', 'description', 'amount', 'direction', 'balance'],
+        required: ['date', 'description', 'amount', 'direction', 'balance', 'confidence'],
         properties: {
           date: { type: 'string', description: 'ISO date yyyy-mm-dd' },
           description: { type: 'string' },
           amount: { type: 'string', description: 'Raw unsigned amount as printed, e.g. "45.00"' },
           direction: { type: 'string', enum: ['credit', 'debit'] },
           balance: { type: ['string', 'null'], description: 'Raw running balance as printed on this row, or null if the statement has no balance column' },
+          confidence: { type: 'number', minimum: 0, maximum: 1, description: 'Your certainty that date, amount and direction were read correctly from the source (1 = perfectly legible)' },
         },
       },
     },
@@ -63,14 +66,16 @@ interface RawExtraction {
   currency: string;
   periodStart: string | null;
   periodEnd: string | null;
-  openingBalance: string;
-  closingBalance: string;
+  openingBalance: string | null;
+  closingBalance: string | null;
+  declaredTransactionCount: number | null;
   transactions: Array<{
     date: string;
     description: string;
     amount: string;
     direction: 'credit' | 'debit';
     balance: string | null;
+    confidence: number;
   }>;
 }
 
@@ -78,7 +83,10 @@ const PROMPT = `Extract every transaction from this bank statement, in statement
 Copy money values EXACTLY as printed (keep separators, do not reformat, do not compute).
 Amounts are unsigned; use "direction" for credit vs debit. If a row shows a running balance, copy it; otherwise balance is null.
 Opening balance = balance BEFORE the first listed transaction (often labelled "balance brought forward" / "start balance").
-Closing balance = balance AFTER the last transaction. Do not invent or omit rows.`;
+Closing balance = balance AFTER the last transaction. If the statement genuinely prints neither, use null — NEVER invent a balance.
+UK/IE statements print dates as DD/MM or "DD MMM" — resolve to ISO yyyy-mm-dd, carrying the statement year across month boundaries.
+If the statement declares its own transaction count, report it in declaredTransactionCount.
+For each row, report confidence (0-1): 1 for crisp print, lower when the source is blurred, creased or ambiguous. Do not invent or omit rows.`;
 
 const IMAGE_TYPES: Record<string, 'image/png' | 'image/jpeg' | 'image/webp'> = {
   '.png': 'image/png',
@@ -158,8 +166,10 @@ export function mapRawExtraction(raw: RawExtraction): ExtractedStatement {
       description: t.description,
       amountMinor: t.direction === 'debit' ? -abs : abs,
       balanceMinor: t.balance === null ? null : parseMoneyToMinor(t.balance),
+      confidence: Math.max(0, Math.min(1, t.confidence)),
     };
   });
+  const balancesMissing = raw.openingBalance === null && raw.closingBalance === null;
   return {
     bankName: raw.bankName,
     accountHolder: raw.accountHolder,
@@ -167,8 +177,10 @@ export function mapRawExtraction(raw: RawExtraction): ExtractedStatement {
     currency: raw.currency.toUpperCase(),
     periodStart: raw.periodStart,
     periodEnd: raw.periodEnd,
-    openingBalanceMinor: parseMoneyToMinor(raw.openingBalance),
-    closingBalanceMinor: parseMoneyToMinor(raw.closingBalance),
+    openingBalanceMinor: raw.openingBalance === null ? 0 : parseMoneyToMinor(raw.openingBalance),
+    closingBalanceMinor: raw.closingBalance === null ? 0 : parseMoneyToMinor(raw.closingBalance),
+    balancesMissing: balancesMissing || undefined,
+    declaredTransactionCount: raw.declaredTransactionCount,
     transactions,
   };
 }

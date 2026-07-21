@@ -101,8 +101,9 @@ test('mapRawExtraction maps raw strings to signed minor units', () => {
     periodEnd: null,
     openingBalance: '£1,000.00',
     closingBalance: '£955.00',
+    declaredTransactionCount: 1,
     transactions: [
-      { date: '2026-06-02', description: 'Coffee', amount: '45.00', direction: 'debit', balance: '955.00' },
+      { date: '2026-06-02', description: 'Coffee', amount: '45.00', direction: 'debit', balance: '955.00', confidence: 0.98 },
     ],
   });
   assert.equal(stmt.currency, 'GBP');
@@ -110,4 +111,48 @@ test('mapRawExtraction maps raw strings to signed minor units', () => {
   assert.equal(stmt.transactions[0]?.amountMinor, -4500);
   assert.equal(stmt.transactions[0]?.balanceMinor, 95500);
   assert.equal(reconcileStatement(stmt).verified, true);
+});
+
+test('warnings do not block the badge; errors do', () => {
+  const warned = structuredClone(goodStatement);
+  warned.transactions[1] = { ...warned.transactions[1]!, confidence: 0.5 };
+  const result = reconcileStatement(warned);
+  assert.equal(result.verified, true); // low confidence is amber, not blocking
+  assert.ok(result.issues.some((i) => i.code === 'LOW_CONFIDENCE_FIELD' && i.severity === 'warning'));
+  assert.deepEqual(result.warnedRows, [1]);
+  assert.deepEqual(result.flaggedRows, []);
+});
+
+test('missing balances never auto-verify (VER-3)', () => {
+  const nb = structuredClone(goodStatement);
+  nb.balancesMissing = true;
+  const result = reconcileStatement(nb);
+  assert.equal(result.verified, false);
+  assert.ok(result.issues.some((i) => i.code === 'MISSING_BALANCE_DATA' && i.severity === 'warning'));
+  assert.ok(!result.issues.some((i) => i.severity === 'error')); // rows still chain-check cleanly
+});
+
+test('declared count mismatch raises a warning (VER-5)', () => {
+  const c = structuredClone(goodStatement);
+  c.declaredTransactionCount = 5;
+  const result = reconcileStatement(c);
+  assert.equal(result.verified, true);
+  assert.ok(result.issues.some((i) => i.code === 'TRANSACTION_COUNT_MISMATCH'));
+});
+
+test('exact duplicates are kept and flagged (VER-6)', () => {
+  const d = structuredClone(goodStatement);
+  const dup = { ...d.transactions[1]! };
+  d.transactions.splice(2, 0, dup);
+  // repair balances so only the duplicate check fires: recompute closing
+  d.closingBalanceMinor = d.openingBalanceMinor + d.transactions.reduce((n, t) => n + t.amountMinor, 0);
+  d.transactions.forEach((t) => (t.balanceMinor = null));
+  const result = reconcileStatement(d);
+  assert.equal(d.transactions.length, 5); // never auto-removed
+  assert.ok(result.issues.some((i) => i.code === 'DUPLICATE_ROW' && i.rowIndex === 2));
+});
+
+test('computedClosingMinor is always present in the contract (VER-7)', () => {
+  const result = reconcileStatement(goodStatement);
+  assert.equal(result.computedClosingMinor, goodStatement.closingBalanceMinor);
 });
