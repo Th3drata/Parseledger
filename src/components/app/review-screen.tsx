@@ -365,7 +365,7 @@ export function ReviewScreen({
             ))}
             <div className="flex items-baseline justify-between gap-3 border-t border-iron pt-2">
               <dt className="tnum text-caption uppercase text-slate">= Computed</dt>
-              <dd className={`tnum text-figure ${result.verified ? 'text-reconciled' : 'text-flag'}`}>
+              <dd className={`tnum figure-glow text-figure ${result.verified ? 'text-reconciled' : 'text-flag'}`}>
                 {formatMinor(computedClosing, currency)}
               </dd>
             </div>

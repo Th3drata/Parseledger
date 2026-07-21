@@ -28,7 +28,7 @@ export default async function AppHomePage() {
           [String(rows), 'rows extracted', 'integer pence, no floats'],
         ].map(([n, label, sub]) => (
           <div key={label} className="bg-paper px-5 py-4">
-            <p className="tnum text-figure-lg font-medium text-ink">{n}</p>
+            <p className="tnum figure-glow text-figure-lg font-medium text-ink">{n}</p>
             <p className="mt-1 text-caption font-medium uppercase tracking-wide text-slate">{label}</p>
             <p className="mt-0.5 text-caption text-ash">{sub}</p>
           </div>

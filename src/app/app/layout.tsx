@@ -22,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const demoMode = !process.env.ANTHROPIC_API_KEY;
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="theme-midnight grain flex min-h-screen bg-paper">
       {/* ——— Sidebar — the instrument's spine ——— */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-ledger sm:flex">
         <Link href="/app" className="flex items-center gap-2.5 border-b border-hairline px-5 py-4 text-[16px] font-semibold tracking-tight text-ink">
@@ -79,7 +79,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             Account
           </Link>
         </header>
-        <main className="mx-auto w-full max-w-[1100px] px-4 py-8 sm:px-8 sm:py-10">{children}</main>
+        <main className="midnight-glow min-h-screen"><div className="mx-auto w-full max-w-[1100px] px-4 py-8 sm:px-8 sm:py-10">{children}</div></main>
       </div>
 
       <CommandPalette />

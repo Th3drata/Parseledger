@@ -88,6 +88,52 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ————— The Midnight Ledger — the app's own night (scoped theme) —————
+   The product is an instrument; instruments live in cockpits. Every semantic
+   token is remapped, so the entire app UI flips without touching a class.
+   The colour law survives: the trio still means verification, nothing else. */
+.theme-midnight {
+  color-scheme: dark;
+  --color-paper: #0c0f16;
+  --color-ledger: #12161f;
+  --color-mist: #1a1f2b;
+  --color-hairline: rgba(232, 236, 244, 0.09);
+  --color-iron: rgba(232, 236, 244, 0.2);
+  --color-ink: #eceff5;
+  --color-ink-soft: #c9ceda;
+  --color-slate: #8b94a7;
+  --color-ash: #5d6577;
+  --color-reconciled: #3ddc84;
+  --color-reconciled-wash: rgba(61, 220, 132, 0.13);
+  --color-flag: #ff6b61;
+  --color-flag-wash: rgba(255, 107, 97, 0.11);
+  --color-caution: #eab84d;
+  --color-caution-wash: rgba(234, 184, 77, 0.12);
+  --shadow-artifact: 0 0 0 1px rgba(232, 236, 244, 0.07), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
+  --shadow-popover: 0 0 0 1px rgba(232, 236, 244, 0.09), 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* A quiet instrument glow at the top of the cockpit — barely there, alive. */
+.midnight-glow {
+  background:
+    radial-gradient(55% 40% at 30% 0%, rgba(61, 220, 132, 0.05), transparent 70%),
+    radial-gradient(45% 35% at 80% 0%, rgba(90, 130, 255, 0.04), transparent 70%);
+}
+
+/* Figures that matter glow faintly on the dark stack. */
+.theme-midnight .figure-glow {
+  text-shadow: 0 0 18px color-mix(in oklab, currentColor 35%, transparent);
+}
+
+/* Primary action inverts on midnight: light key on a dark board. */
+.theme-midnight .key-primary {
+  background: var(--color-ink);
+  color: #0c0f16;
+}
+.theme-midnight .key-primary:hover {
+  background: #ffffff;
+}
+
 /* ————— Matière (dialecte: texture → matière) ————— */
 
 /* Film grain — whole-site, imperceptible but felt. */
