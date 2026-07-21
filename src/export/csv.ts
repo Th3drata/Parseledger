@@ -34,21 +34,31 @@ function csvRow(fields: string[]): string {
   return fields.map(csvField).join(',');
 }
 
+export interface ExportOpts {
+  /** EXP-7: unverified exports carry an explicit UNVERIFIED marker column. */
+  unverified?: boolean;
+}
+
 /**
- * Generic CSV export: Date (yyyy-mm-dd), Description, Amount (signed decimal),
- * Balance (decimal or empty).
+ * Generic CSV export (EXP-1): Date (yyyy-mm-dd), Description, Amount (signed
+ * decimal, credits positive), Balance, Direction, Currency — plus a Status
+ * column stamped UNVERIFIED when the export bypassed verification.
  */
-export function toCsv(stmt: ExtractedStatement): string {
-  const lines: string[] = [csvRow(['Date', 'Description', 'Amount', 'Balance'])];
+export function toCsv(stmt: ExtractedStatement, opts: ExportOpts = {}): string {
+  const header = ['Date', 'Description', 'Amount', 'Balance', 'Direction', 'Currency'];
+  if (opts.unverified) header.push('Status');
+  const lines: string[] = [csvRow(header)];
   for (const tx of stmt.transactions) {
-    lines.push(
-      csvRow([
-        tx.date,
-        csvTextField(tx.description),
-        minorToDecimalString(tx.amountMinor),
-        tx.balanceMinor === null ? '' : minorToDecimalString(tx.balanceMinor),
-      ]),
-    );
+    const fields = [
+      tx.date,
+      csvTextField(tx.description),
+      minorToDecimalString(tx.amountMinor),
+      tx.balanceMinor === null ? '' : minorToDecimalString(tx.balanceMinor),
+      tx.amountMinor >= 0 ? 'credit' : 'debit',
+      stmt.currency,
+    ];
+    if (opts.unverified) fields.push('UNVERIFIED');
+    lines.push(csvRow(fields));
   }
   return lines.join('\r\n') + '\r\n';
 }

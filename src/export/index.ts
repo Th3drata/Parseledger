@@ -1,15 +1,17 @@
-import type { ExtractedStatement } from '../types';
-import { toCsv, minorToDecimalString } from './csv';
+import type { ExtractedStatement, VerificationResult } from '../types';
+import { toCsv, minorToDecimalString, type ExportOpts } from './csv';
 import { toXeroCsv } from './xero';
 import { toQbo } from './qbo';
+import { toQuickBooksCsv } from './qbcsv';
 import { toXlsx } from './xlsx';
 
-export { toCsv, minorToDecimalString } from './csv';
+export { toCsv, minorToDecimalString, type ExportOpts } from './csv';
 export { toXeroCsv } from './xero';
 export { toQbo } from './qbo';
+export { toQuickBooksCsv } from './qbcsv';
 export { toXlsx } from './xlsx';
 
-export type ExportFormatId = 'csv' | 'xero' | 'qbo' | 'xlsx';
+export type ExportFormatId = 'csv' | 'xero' | 'qbo' | 'qbcsv' | 'xlsx';
 
 export interface ExportFormat {
   id: ExportFormatId;
@@ -27,6 +29,7 @@ export const EXPORT_FORMATS: ExportFormat[] = [
     ext: 'qbo',
     mime: 'application/x-ofx',
   },
+  { id: 'qbcsv', label: 'QuickBooks CSV', ext: 'csv', mime: 'text/csv' },
   {
     id: 'xlsx',
     label: 'Excel',
@@ -63,26 +66,36 @@ function getFormat(formatId: ExportFormatId): ExportFormat {
   return format;
 }
 
+export interface ExportStatementOpts extends ExportOpts {
+  /** Pre-computed verification result (avoids recomputing for the xlsx sheet). */
+  result?: VerificationResult;
+}
+
 export async function exportStatement(
   formatId: ExportFormatId,
   stmt: ExtractedStatement,
+  opts: ExportStatementOpts = {},
 ): Promise<ExportResult> {
   const format = getFormat(formatId);
   const fileName = buildFileName(stmt, format.ext);
+  const exportOpts: ExportOpts = { unverified: opts.unverified };
 
   let data: string | Uint8Array;
   switch (formatId) {
     case 'csv':
-      data = toCsv(stmt);
+      data = toCsv(stmt, exportOpts);
       break;
     case 'xero':
-      data = toXeroCsv(stmt);
+      data = toXeroCsv(stmt, exportOpts);
       break;
     case 'qbo':
-      data = toQbo(stmt);
+      data = toQbo(stmt, exportOpts);
+      break;
+    case 'qbcsv':
+      data = toQuickBooksCsv(stmt, exportOpts);
       break;
     case 'xlsx':
-      data = await toXlsx(stmt);
+      data = await toXlsx(stmt, opts.result, exportOpts);
       break;
   }
 

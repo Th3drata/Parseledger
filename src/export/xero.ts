@@ -1,5 +1,5 @@
 import type { ExtractedStatement } from '../types';
-import { minorToDecimalString, csvTextField } from './csv';
+import { minorToDecimalString, csvTextField, type ExportOpts } from './csv';
 
 /** Convert an ISO date (yyyy-mm-dd) to Xero's expected dd/mm/yyyy. */
 function isoToDdMmYyyy(iso: string): string {
@@ -29,13 +29,21 @@ function csvRow(fields: string[]): string {
  * Header: *Date,*Amount,Payee,Description,Reference,Cheque Number
  * Date: dd/mm/yyyy. Amount: signed decimal, credits positive, debits negative.
  */
-export function toXeroCsv(stmt: ExtractedStatement): string {
+export function toXeroCsv(stmt: ExtractedStatement, opts: ExportOpts = {}): string {
   const lines: string[] = [
-    csvRow(['*Date', '*Amount', 'Payee', 'Description', 'Reference', 'Cheque Number']),
+    csvRow(
+      opts.unverified
+        ? ['*Date', '*Amount', 'Payee', 'Description', 'Reference', 'Cheque Number', 'Status']
+        : ['*Date', '*Amount', 'Payee', 'Description', 'Reference', 'Cheque Number'],
+    ),
   ];
   for (const tx of stmt.transactions) {
     lines.push(
-      csvRow([isoToDdMmYyyy(tx.date), minorToDecimalString(tx.amountMinor), '', csvTextField(tx.description), '', '']),
+      csvRow(
+        opts.unverified
+          ? [isoToDdMmYyyy(tx.date), minorToDecimalString(tx.amountMinor), '', csvTextField(tx.description), '', '', 'UNVERIFIED']
+          : [isoToDdMmYyyy(tx.date), minorToDecimalString(tx.amountMinor), '', csvTextField(tx.description), '', ''],
+      ),
     );
   }
   return lines.join('\r\n') + '\r\n';

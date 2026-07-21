@@ -6,14 +6,16 @@ import { toCsv } from './csv';
 import { toXeroCsv } from './xero';
 import { toQbo } from './qbo';
 import { toXlsx } from './xlsx';
+import { toQuickBooksCsv } from './qbcsv';
+import { reconcileStatement } from '../verification';
 
 test('toCsv: row count and exact first data row', () => {
   const csv = toCsv(demoStatement);
   const lines = csv.trim().split('\r\n');
   // header + one row per transaction
   assert.equal(lines.length, demoStatement.transactions.length + 1);
-  assert.equal(lines[0], 'Date,Description,Amount,Balance');
-  assert.equal(lines[1], '2026-06-01,Acme Consulting Ltd — invoice 0142,1850.00,4697.12');
+  assert.equal(lines[0], 'Date,Description,Amount,Balance,Direction,Currency');
+  assert.equal(lines[1], '2026-06-01,Acme Consulting Ltd — invoice 0142,1850.00,4697.12,credit,GBP');
 });
 
 test('toCsv: escapes description with comma and quote', () => {
@@ -30,7 +32,7 @@ test('toCsv: escapes description with comma and quote', () => {
   };
   const csv = toCsv(stmt);
   const lines = csv.trim().split('\r\n');
-  assert.equal(lines[1], '2026-01-01,"Smith, ""The Plumber"" Ltd",-10.00,50.00');
+  assert.equal(lines[1], '2026-01-01,"Smith, ""The Plumber"" Ltd",-10.00,50.00,debit,GBP');
 });
 
 test('toXeroCsv: header and dd/mm/yyyy date format', () => {
@@ -85,4 +87,34 @@ test('CSV formula injection guard on descriptions', async () => {
   }
   // legitimate negative amounts stay intact
   assert.ok(csv.includes(',-1.00,'));
+});
+
+test('toQuickBooksCsv: 4-column structure with credit/debit split (EXP-3b)', () => {
+  const csv = toQuickBooksCsv(demoStatement);
+  const lines = csv.trim().split('\r\n');
+  assert.equal(lines[0], 'Date,Description,Credit,Debit');
+  assert.equal(lines[1], '01/06/2026,Acme Consulting Ltd — invoice 0142,1850.00,');
+  assert.ok(lines.some((l) => l.endsWith(',,742.10') || l.includes(',742.10')));
+});
+
+test('UNVERIFIED status column present only on unverified exports (EXP-7)', () => {
+  const verifiedCsv = toCsv(demoStatement);
+  assert.ok(!verifiedCsv.includes('UNVERIFIED'));
+  const unverifiedCsv = toCsv(demoStatement, { unverified: true });
+  const lines = unverifiedCsv.trim().split('\r\n');
+  assert.ok(lines[0]!.endsWith(',Status'));
+  assert.ok(lines[1]!.endsWith(',UNVERIFIED'));
+  const qb = toQuickBooksCsv(demoStatement, { unverified: true });
+  assert.ok(qb.includes('UNVERIFIED'));
+});
+
+test('toXlsx: two sheets — Transactions and Reconciliation (EXP-4)', async () => {
+  const result = reconcileStatement(demoStatement);
+  const bytes = await toXlsx(demoStatement, result);
+  // re-read with exceljs: the zip is compressed, raw-byte search won't work
+  const ExcelJS = (await import('exceljs')).default;
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(Buffer.from(bytes));
+  const names = wb.worksheets.map((w) => w.name);
+  assert.deepEqual(names, ['Transactions', 'Reconciliation']);
 });

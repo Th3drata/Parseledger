@@ -1,5 +1,5 @@
 import type { ExtractedStatement, ExtractedTransaction } from '../types';
-import { minorToDecimalString } from './csv';
+import { minorToDecimalString, type ExportOpts } from './csv';
 
 /** Convert an ISO date (yyyy-mm-dd) to OFX's yyyymmdd. */
 function isoToYyyymmdd(iso: string): string {
@@ -28,7 +28,7 @@ function lastTransactionDate(stmt: ExtractedStatement): string | null {
  * Deterministic: DTSERVER derives from periodEnd or the last transaction date,
  * never from the current wall-clock time.
  */
-export function toQbo(stmt: ExtractedStatement): string {
+export function toQbo(stmt: ExtractedStatement, opts: ExportOpts = {}): string {
   const asOfIso = stmt.periodEnd ?? lastTransactionDate(stmt);
   if (asOfIso === null) {
     throw new Error('cannot build OFX statement: no periodEnd and no transactions');
@@ -61,7 +61,7 @@ export function toQbo(stmt: ExtractedStatement): string {
         `<TRNAMT>${minorToDecimalString(tx.amountMinor)}`,
         `<FITID>${buildFitId(index, tx)}`,
         `<NAME>${name}`,
-        `<MEMO>${memo}`,
+        `<MEMO>${opts.unverified ? '[UNVERIFIED] ' : ''}${memo}`,
         '</STMTTRN>',
       ].join('\r\n');
     })
