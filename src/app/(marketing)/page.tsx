@@ -5,12 +5,14 @@ import { DemoWidget } from '@/components/marketing/demo-widget';
 import { AppFrame } from '@/components/marketing/app-frame';
 import { ExtractArtifact, VerifyArtifact, ReviewArtifact, ExportArtifact } from '@/components/marketing/mocks';
 import { ProductTour, type TourStep } from '@/components/marketing/product-tour';
+import { ReconciliationPiece } from '@/components/marketing/reconciliation-piece';
 import { VerifiedBadge } from '@/components/app/verified-badge';
 import { BANKS, FORMATS, convertSlug, getFormat } from '@/lib/seo-banks';
 import SplitTextHero from '@/components/motion/SplitTextHero';
 import ScrambleIn from '@/components/motion/ScrambleIn';
 import Reveal from '@/components/motion/Reveal';
 import { RuledLine } from '@/components/motion/ruled-line';
+import Marquee from '@/components/motion/Marquee';
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -101,7 +103,9 @@ export default function LandingPage() {
   return (
     <>
       {/* ————— Hero ————— */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-24 pt-16 sm:pt-24">
+      <section className="relative">
+        <div aria-hidden className="ruled-paper absolute inset-x-0 top-0 h-[520px]" />
+        <div className="relative mx-auto max-w-[1200px] px-6 pb-24 pt-16 sm:pt-24">
         <div className="max-w-3xl">
           <Eyebrow>Statement conversion for UK &amp; Irish bookkeepers</Eyebrow>
           <div className="mt-4">
@@ -177,6 +181,22 @@ export default function LandingPage() {
             Live demo — this is the real verification engine. Click the flagged amount and fix it.
           </p>
         </div>
+        </div>
+      </section>
+
+      {/* ————— Coverage strip ————— */}
+      <section aria-label="Bank statement layouts covered" className="border-y border-hairline py-5">
+        <Marquee speed={38} className="mx-auto max-w-[1200px] px-6">
+          {BANKS.map((bank) => (
+            <span key={bank.slug} className="tnum inline-flex items-center gap-2 whitespace-nowrap text-caption uppercase tracking-[0.14em] text-slate">
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden className="text-reconciled">
+                <path d="M2.5 7.5l3 3 6-6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {bank.name}
+            </span>
+          ))}
+        </Marquee>
+        <p className="mt-3 text-center text-caption text-ash">Statement layouts covered at launch — UK &amp; Ireland</p>
       </section>
 
       {/* ————— Product band (inverted ink stack, the real software) ————— */}
@@ -275,34 +295,7 @@ export default function LandingPage() {
               </div>
             </Reveal>
           </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <Reveal delay={0.1}>
-              <div className="h-full rounded-cards border border-hairline p-8">
-                <h3 className="text-body-lg font-medium text-ink">1. The totals equation</h3>
-                <p className="tnum mt-4 rounded-tags bg-ledger px-3 py-2 text-figure text-ink">
-                  opening + Σ credits − Σ debits = closing
-                </p>
-                <p className="mt-4 text-body-sm text-ink-soft">
-                  The extracted figures must reproduce the statement&apos;s own closing balance
-                  exactly. No rounding, no tolerance, no &ldquo;close enough&rdquo; — a
-                  one-penny discrepancy fails the statement.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <div className="h-full rounded-cards border border-hairline p-8">
-                <h3 className="text-body-lg font-medium text-ink">2. Line-by-line running balance</h3>
-                <p className="tnum mt-4 rounded-tags bg-ledger px-3 py-2 text-figure text-ink">
-                  balance[n−1] + amount[n] = balance[n]
-                </p>
-                <p className="mt-4 text-body-sm text-ink-soft">
-                  Where the statement prints a running balance, every row is checked against it.
-                  A mismatch flags the precise row — one error produces one flag, not a cascade
-                  of noise down the page.
-                </p>
-              </div>
-            </Reveal>
-          </div>
+          <ReconciliationPiece />
           <Reveal delay={0.15}>
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-cards border border-hairline bg-ledger px-6 py-5">
               <span className="text-body-sm text-ink-soft">One badge, three truths:</span>

@@ -88,6 +88,73 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ————— Matière (dialecte: texture → matière) ————— */
+
+/* Film grain — whole-site, imperceptible but felt. */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The ruled page — faint ledger lines, the paper the product writes on. */
+.ruled-paper {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    color-mix(in oklab, var(--color-hairline) 55%, transparent) 35px,
+    color-mix(in oklab, var(--color-hairline) 55%, transparent) 36px
+  );
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 80%, transparent);
+}
+
+/* Dark-chapter texture — a quiet dot grid on ink, engineering paper at night. */
+.ink-grid {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-paper) 7%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+}
+
+/* Frosted ledger glass — earned only over imagery/video (Stripe's frosted ledger). */
+.glass-paper {
+  background: color-mix(in oklab, var(--color-paper) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+}
+
+/* The verification stamp — pressed into the page when the equation closes. */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-9deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.96) rotate(-4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-4deg);
+  }
+}
+.stamp-in {
+  animation: stamp-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp-in {
+    animation: none;
+    opacity: 1;
+    transform: rotate(-4deg);
+  }
+}
+
 /* Verification badge settling in when the engine's verdict changes. */
 @keyframes badge-in {
   from {
@@ -107,4 +174,15 @@ body {
   .badge-in {
     animation: none;
   }
+}
+
+/* ————— Global focus & selection — one ring, one highlight, everywhere ————— */
+:focus-visible {
+  outline: 2px solid var(--color-iron);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-mist);
 }

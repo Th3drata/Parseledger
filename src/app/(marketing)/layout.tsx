@@ -1,43 +1,49 @@
 import Link from 'next/link';
 import { BANKS, COMPETITORS, FORMATS, convertSlug } from '@/lib/seo-banks';
 import { LenisProvider } from '@/components/motion/lenis-provider';
+import { NavLink } from '@/components/marketing/nav-link';
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <LenisProvider>
-    <div className="flex min-h-screen flex-col bg-paper">
-      <header className="border-b border-hairline bg-paper">
-        <div className="mx-auto flex h-[68px] max-w-[1200px] items-center justify-between gap-6 px-6">
-          <Link href="/" className="text-[18px] font-semibold tracking-tight text-ink">
-            Parseledger
-          </Link>
-          <nav className="hidden items-center gap-6 md:flex">
-            <Link href="/#workflow" className="text-body-sm text-slate hover:text-ink">
-              How it works
+    <div className="grain flex min-h-screen flex-col bg-paper">
+      {/* Split-header à metrics — wordmark bordé · liens mono · statut diégétique · CTA */}
+      <header className="glass-paper sticky top-0 z-40 border-b border-hairline">
+        <div className="mx-auto flex h-[64px] max-w-[1200px] items-stretch justify-between px-6">
+          <div className="flex items-stretch">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 border-x border-hairline px-5 text-[17px] font-semibold tracking-tight text-ink"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="text-ink">
+                <path d="M1 3.5h14M1 7h14M1 10.5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M10.5 12.5l2 2 3-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Parseledger
             </Link>
-            <Link href="/#verification" className="text-body-sm text-slate hover:text-ink">
-              Verification
-            </Link>
-            <Link href="/#banks" className="text-body-sm text-slate hover:text-ink">
-              Banks
-            </Link>
-            <Link href="/pricing" className="text-body-sm text-slate hover:text-ink">
-              Pricing
-            </Link>
-            <Link href="/security" className="text-body-sm text-slate hover:text-ink">
-              Security
-            </Link>
-          </nav>
+            <nav className="hidden items-center gap-7 border-r border-hairline px-7 lg:flex">
+              <NavLink href="/#workflow" label="Workflow" />
+              <NavLink href="/#verification" label="Verification" />
+              <NavLink href="/#banks" label="Banks" />
+              <NavLink href="/pricing" label="Pricing" />
+              <NavLink href="/security" label="Security" />
+            </nav>
+            {/* Statut diégétique — la promesse en mono, toujours à l'écran */}
+            <p className="tnum hidden items-center gap-2 px-6 text-caption text-ash xl:flex" aria-hidden>
+              <span className="h-1.5 w-1.5 rounded-full bg-reconciled" />
+              opening + credits − debits = closing
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <Link
               href="/signin"
-              className="hidden rounded-buttons border border-hairline px-4 py-2 text-body-sm font-medium text-ink hover:bg-ledger sm:inline-block"
+              className="hidden whitespace-nowrap rounded-buttons border border-hairline px-4 py-2 text-body-sm font-medium text-ink hover:bg-ledger sm:inline-block"
             >
               Sign in
             </Link>
             <Link
               href="/signup"
-              className="rounded-buttons bg-ink px-4 py-2 text-body-sm font-medium text-paper hover:bg-ink-soft"
+              className="whitespace-nowrap rounded-buttons bg-ink px-4 py-2 text-body-sm font-medium text-paper hover:bg-ink-soft"
             >
               Start free
             </Link>
@@ -49,6 +55,23 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 
       <footer className="border-t border-hairline">
         <div className="mx-auto max-w-[1200px] px-6 py-16">
+          {/* Manifest — the footer opens the way a statement closes: balanced. */}
+          <div className="mb-12 flex flex-col gap-4 border-b border-hairline pb-10 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="flex items-center gap-2.5 text-[17px] font-semibold tracking-tight text-ink">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="text-ink">
+                  <path d="M1 3.5h14M1 7h14M1 10.5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M10.5 12.5l2 2 3-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Parseledger
+              </p>
+              <p className="mt-3 font-serif text-subheading font-normal text-ink">
+                Verified to the cent.
+              </p>
+            </div>
+            <p className="tnum text-body-sm text-ash">opening + credits − debits = closing</p>
+          </div>
+
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {FORMATS.map((format) => (
               <div key={format.slug}>
@@ -95,10 +118,13 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             ))}
           </div>
 
-          <p className="mt-8 text-body-sm text-ash">
-            © {new Date().getFullYear()} Parseledger. Parseledger converts and verifies bank
-            statement data; it does not provide accounting, tax or financial advice.
-          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <p className="text-body-sm text-ash">
+              © {new Date().getFullYear()} Parseledger. Parseledger converts and verifies bank
+              statement data; it does not provide accounting, tax or financial advice.
+            </p>
+            <p className="tnum shrink-0 text-caption text-ash">0 floats · 2 checks · 24h purge</p>
+          </div>
         </div>
       </footer>
     </div>
