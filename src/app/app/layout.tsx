@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { authEnabled, getUserFromContext } from '@/lib/auth';
-import { SignOutButton } from '@/components/app/sign-out-button';
+import { authEnabled, getUserFromContext, type SessionUser } from '@/lib/auth';
+import { UserMenu } from '@/components/app/user-menu';
 import { CommandPalette } from '@/components/app/command-palette';
 
 function Glyph() {
@@ -14,7 +14,7 @@ function Glyph() {
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  let user: { userId: string; email: string } | null = null;
+  let user: SessionUser | null = null;
   if (authEnabled()) {
     user = await getUserFromContext();
     if (!user) redirect('/signin');
@@ -38,11 +38,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <span className="kbd">G W</span>
           </Link>
           <Link
-            href="/app/account"
+            href="/app/settings"
             className="flex items-center justify-between rounded-buttons px-3 py-2 text-body-sm font-medium text-slate hover:bg-mist hover:text-ink"
           >
-            Account
-            <span className="kbd">G A</span>
+            Settings
+            <span className="kbd">G S</span>
           </Link>
         </nav>
         <div className="space-y-3 border-t border-hairline px-5 py-4">
@@ -58,12 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </p>
           )}
           <p className="tnum text-caption text-ash">opening + credits − debits = closing</p>
-          {user ? (
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-caption text-slate">{user.email}</span>
-              <SignOutButton />
-            </div>
-          ) : null}
+          {user ? <UserMenu name={user.name} email={user.email} /> : null}
         </div>
       </aside>
 
@@ -75,8 +70,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Glyph />
             Parseledger
           </Link>
-          <Link href="/app/account" className="text-body-sm text-slate">
-            Account
+          <Link href="/app/settings" className="text-body-sm text-slate">
+            Settings
           </Link>
         </header>
         <main className="midnight-glow min-h-screen"><div className="mx-auto w-full max-w-[1100px] px-4 py-8 sm:px-8 sm:py-10">{children}</div></main>

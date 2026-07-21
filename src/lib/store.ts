@@ -292,6 +292,24 @@ export async function setJobExported(id: string, ownerId: string): Promise<Job |
  * Purge jobs past their delete_after deadline. Returns the number removed.
  * DB mode cascades to statements/transactions/issues via FK on delete.
  */
+/** Wipe every job for an owner (Settings → Data & privacy). Returns count. */
+export async function deleteAllJobs(ownerId: string): Promise<number> {
+  const pool = getPool();
+  if (!pool) {
+    let removed = 0;
+    for (const [id, job] of mem) {
+      if (job.ownerId === ownerId) {
+        mem.delete(id);
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+  const res = await pool.query(`delete from jobs where owner_id = $1`, [ownerId]);
+  await pool.query(`delete from usage_events where owner_id = $1`, [ownerId]);
+  return res.rowCount ?? 0;
+}
+
 export async function purgeExpiredJobs(): Promise<number> {
   const pool = getPool();
   if (!pool) {

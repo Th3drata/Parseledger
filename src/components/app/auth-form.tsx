@@ -85,12 +85,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
         />
       </div>
 
+      {!isSignup && (
+        <p className="text-right text-body-sm">
+          <Link href="/forgot-password" className="text-slate underline underline-offset-2 hover:text-ink">
+            Forgot password?
+          </Link>
+        </p>
+      )}
+
       {error && <p className="text-body-sm text-flag">{error}</p>}
 
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-buttons bg-ink px-4 py-2.5 text-body-sm font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-60"
+        className="w-full rounded-buttons bg-ink px-4 py-2.5 text-body-sm font-medium text-paper transition-colors hover:bg-ink-soft disabled:opacity-60"
       >
         {busy ? 'Please wait…' : isSignup ? 'Create account' : 'Sign in'}
       </button>

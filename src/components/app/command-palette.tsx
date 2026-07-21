@@ -12,7 +12,10 @@ interface PaletteItem {
 
 const STATIC_ITEMS: PaletteItem[] = [
   { id: 'workspace', label: 'Go to workspace', hint: 'Upload & jobs', href: '/app' },
-  { id: 'account', label: 'Account & plan', hint: 'Usage, billing', href: '/app/account' },
+  { id: 'settings', label: 'Settings — profile', hint: 'Name, account', href: '/app/settings' },
+  { id: 'security', label: 'Settings — security', hint: 'Password, sessions', href: '/app/settings/security' },
+  { id: 'billing', label: 'Settings — billing', hint: 'Plan, usage', href: '/app/settings/billing' },
+  { id: 'data', label: 'Settings — data & privacy', hint: 'Retention, deletion', href: '/app/settings/data' },
   { id: 'site', label: 'Marketing site', hint: 'parseledger.co', href: '/' },
   { id: 'pricing', label: 'Pricing', hint: 'Plans', href: '/pricing' },
 ];
@@ -62,7 +65,8 @@ export function CommandPalette() {
       }
       if (Date.now() - goArmedAt < 800) {
         if (key === 'w') router.push('/app');
-        if (key === 'a') router.push('/app/account');
+        if (key === 's') router.push('/app/settings');
+        if (key === 'a') router.push('/app/settings/billing');
         goArmedAt = 0;
       }
     };

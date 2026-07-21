@@ -12,16 +12,72 @@ export function authEnabled(): boolean {
   return Boolean(process.env.BETTER_AUTH_SECRET) && getPool() !== null;
 }
 
+/**
+ * Password-reset delivery: Resend when a key is configured, console otherwise
+ * (the link still works — copy it from the server logs in development).
+ */
+async function sendResetEmail(email: string, url: string): Promise<void> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    console.log(`[auth] password reset for ${email}: ${url}`);
+    return;
+  }
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM ?? 'Parseledger <no-reply@parseledger.co>',
+      to: [email],
+      subject: 'Reset your Parseledger password',
+      text: `Someone requested a password reset for your Parseledger account.\n\nReset it here (link expires in 1 hour):\n${url}\n\nIf this wasn't you, ignore this email — nothing changes.`,
+    }),
+  });
+}
+
 function buildAuth() {
   const pool = getPool();
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!pool || !secret) return null;
 
+  const baseURL = process.env.BETTER_AUTH_URL;
+  const onProdDomain = Boolean(baseURL?.includes('parseledger.co'));
+
   return betterAuth({
     database: pool,
     secret,
-    baseURL: process.env.BETTER_AUTH_URL,
-    emailAndPassword: { enabled: true },
+    baseURL,
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 8,
+      sendResetPassword: async ({ user, url }) => {
+        await sendResetEmail(user.email, url);
+      },
+    },
+    user: {
+      deleteUser: {
+        enabled: true,
+        // The privacy promise: deleting the account deletes the data.
+        afterDelete: async (user) => {
+          const p = getPool();
+          if (!p) return;
+          await p.query('delete from jobs where owner_id = $1', [user.id]);
+          await p.query('delete from usage_events where owner_id = $1', [user.id]);
+          await p.query('delete from clients where owner_id = $1', [user.id]);
+          await p.query('delete from subscriptions where owner_id = $1', [user.id]);
+        },
+      },
+    },
+    trustedOrigins: [
+      'https://parseledger.co',
+      'https://www.parseledger.co',
+      'https://app.parseledger.co',
+    ],
+    advanced: onProdDomain
+      ? {
+          // One session across apex + app subdomain.
+          crossSubDomainCookies: { enabled: true, domain: '.parseledger.co' },
+        }
+      : {},
     // Passkeys intentionally omitted — the passkey plugin ships separately and
     // is not installed. Email + password only.
     plugins: [nextCookies()],
@@ -79,11 +135,48 @@ export async function getSessionFromContext(): Promise<{ userId: string } | null
   return getSession(await contextHeaders());
 }
 
-/** Signed-in user's id + email for the app chrome, or null. */
-export async function getUserFromContext(): Promise<{ userId: string; email: string } | null> {
+export interface SessionUser {
+  userId: string;
+  email: string;
+  name: string;
+  createdAt: Date;
+}
+
+/** Signed-in user's profile for the app chrome, or null. */
+export async function getUserFromContext(): Promise<SessionUser | null> {
   const auth = getAuth();
   if (!auth) return null;
   const session = await auth.api.getSession({ headers: await contextHeaders() });
   if (!session) return null;
-  return { userId: session.user.id, email: session.user.email };
+  return {
+    userId: session.user.id,
+    email: session.user.email,
+    name: session.user.name ?? session.user.email,
+    createdAt: session.user.createdAt,
+  };
+}
+
+export interface ActiveSession {
+  token: string;
+  createdAt: Date;
+  expiresAt: Date;
+  userAgent: string | null;
+  current: boolean;
+}
+
+/** All active sessions for the signed-in user (for Settings → Security). */
+export async function listSessionsFromContext(): Promise<ActiveSession[]> {
+  const auth = getAuth();
+  if (!auth) return [];
+  const headers = await contextHeaders();
+  const current = await auth.api.getSession({ headers });
+  if (!current) return [];
+  const sessions = await auth.api.listSessions({ headers });
+  return sessions.map((s) => ({
+    token: s.token,
+    createdAt: s.createdAt,
+    expiresAt: s.expiresAt,
+    userAgent: s.userAgent ?? null,
+    current: s.token === current.session.token,
+  }));
 }
