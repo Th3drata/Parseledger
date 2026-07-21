@@ -13,7 +13,7 @@ interface PaletteItem {
 const STATIC_ITEMS: PaletteItem[] = [
   { id: 'workspace', label: 'Go to workspace', hint: 'Upload & jobs', href: '/app' },
   { id: 'account', label: 'Account & plan', hint: 'Usage, billing', href: '/app/account' },
-  { id: 'site', label: 'Marketing site', hint: 'parseledger.com', href: '/' },
+  { id: 'site', label: 'Marketing site', hint: 'parseledger.co', href: '/' },
   { id: 'pricing', label: 'Pricing', hint: 'Plans', href: '/pricing' },
 ];
 

@@ -209,4 +209,4 @@ export function parseConvertSlug(
   return { bank, format };
 }
 
-export const SITE_URL = 'https://parseledger.com';
+export const SITE_URL = 'https://parseledger.co';
