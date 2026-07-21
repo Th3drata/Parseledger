@@ -178,9 +178,35 @@ body {
 
 /* ————— Global focus & selection — one ring, one highlight, everywhere ————— */
 :focus-visible {
-  outline: 2px solid var(--color-iron);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* A row the user was sent to (from the issues rail) announces itself once. */
+@keyframes row-flash {
+  0% {
+    background-color: var(--color-caution-wash);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.row-flash {
+  animation: row-flash 1.6s ease-out 1;
+}
+
+/* Keyboard hint chips — the Linear-style kbd register. */
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--color-iron);
+  border-bottom-width: 2px;
+  background: var(--color-paper);
+  color: var(--color-slate);
 }
 
 ::selection {
