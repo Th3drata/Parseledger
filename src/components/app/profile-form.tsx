@@ -5,10 +5,24 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { authClient } from '@/lib/auth-client';
 
-export function ProfileForm({ initialName, email }: { initialName: string; email: string }) {
+export function ProfileForm({
+  initialName,
+  email,
+  emailVerified,
+}: {
+  initialName: string;
+  email: string;
+  emailVerified: boolean;
+}) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [busy, setBusy] = useState(false);
+
+  async function resendVerification() {
+    const res = await authClient.sendVerificationEmail({ email, callbackURL: '/app/settings' });
+    if (res.error) toast.error(res.error.message ?? 'Could not send the verification email.');
+    else toast.success('Verification email sent — check your inbox.');
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +60,16 @@ export function ProfileForm({ initialName, email }: { initialName: string; email
           disabled
           className="w-full max-w-sm rounded-inputs bg-mist px-3 py-2.5 text-body-sm text-slate outline-none"
         />
+        {emailVerified ? (
+          <p className="text-caption text-slate">Verified address.</p>
+        ) : (
+          <p className="text-caption text-caution">
+            Not verified yet —{' '}
+            <button type="button" onClick={() => void resendVerification()} className="font-medium underline underline-offset-2">
+              resend the link
+            </button>
+          </p>
+        )}
         <p className="text-caption text-ash">Email changes aren&apos;t self-serve yet — contact support.</p>
       </div>
       <button

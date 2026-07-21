@@ -22,7 +22,7 @@ export default async function ProfileSettingsPage() {
         <h2 className="text-body font-semibold text-ink">Profile</h2>
         <p className="mt-1 text-body-sm text-slate">How you appear on exports and in the audit log.</p>
         <div className="mt-5">
-          <ProfileForm initialName={user.name} email={user.email} />
+          <ProfileForm initialName={user.name} email={user.email} emailVerified={user.emailVerified} />
         </div>
       </section>
       <section className="border-t border-hairline pt-6">

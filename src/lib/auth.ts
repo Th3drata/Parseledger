@@ -25,14 +25,19 @@ export function enabledSocialProviders(): SocialProviders {
   };
 }
 
+/** True when a real mailer is configured — email verification is enforced only then. */
+export function mailerConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
 /**
- * Password-reset delivery: Resend when a key is configured, console otherwise
- * (the link still works — copy it from the server logs in development).
+ * Transactional delivery: Resend when a key is configured, console otherwise
+ * (links still work — copy them from the server logs in development).
  */
-async function sendResetEmail(email: string, url: string): Promise<void> {
+async function sendEmail(to: string, subject: string, text: string): Promise<void> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.log(`[auth] password reset for ${email}: ${url}`);
+    console.log(`[auth] email to ${to} — ${subject}\n${text}`);
     return;
   }
   await fetch('https://api.resend.com/emails', {
@@ -40,9 +45,9 @@ async function sendResetEmail(email: string, url: string): Promise<void> {
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: process.env.RESEND_FROM ?? 'Parseledger <no-reply@parseledger.co>',
-      to: [email],
-      subject: 'Reset your Parseledger password',
-      text: `Someone requested a password reset for your Parseledger account.\n\nReset it here (link expires in 1 hour):\n${url}\n\nIf this wasn't you, ignore this email — nothing changes.`,
+      to: [to],
+      subject,
+      text,
     }),
   });
 }
@@ -77,9 +82,32 @@ function buildAuth() {
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
+      // Verification is enforced only when a real mailer exists — otherwise
+      // nobody could ever sign in.
+      requireEmailVerification: mailerConfigured(),
       sendResetPassword: async ({ user, url }) => {
-        await sendResetEmail(user.email, url);
+        await sendEmail(
+          user.email,
+          'Reset your Parseledger password',
+          `Someone requested a password reset for your Parseledger account.\n\nReset it here (link expires in 1 hour):\n${url}\n\nIf this wasn't you, ignore this email — nothing changes.`,
+        );
       },
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendEmail(
+          user.email,
+          'Verify your Parseledger email',
+          `Welcome to Parseledger.\n\nConfirm this email address to activate your account:\n${url}\n\nIf you didn't create this account, ignore this email.`,
+        );
+      },
+    },
+    account: {
+      // Same email via Google/Apple links to the existing account instead of
+      // erroring — the classic "I signed up with email first" papercut.
+      accountLinking: { enabled: true, trustedProviders: ['google', 'apple'] },
     },
     user: {
       deleteUser: {
@@ -168,6 +196,7 @@ export interface SessionUser {
   userId: string;
   email: string;
   name: string;
+  emailVerified: boolean;
   createdAt: Date;
 }
 
@@ -181,6 +210,7 @@ export async function getUserFromContext(): Promise<SessionUser | null> {
     userId: session.user.id,
     email: session.user.email,
     name: session.user.name ?? session.user.email,
+    emailVerified: session.user.emailVerified,
     createdAt: session.user.createdAt,
   };
 }
