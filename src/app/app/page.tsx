@@ -3,7 +3,7 @@ import { listJobs } from '@/lib/store';
 import { formatTimestamp } from '@/lib/format';
 import { resolveOwnerFromContext } from '@/lib/auth';
 import { UploadDropzone } from '@/components/app/upload-dropzone';
-import { StatusChip } from '@/components/app/status-chip';
+import { JobsTable, type JobRow } from '@/components/app/jobs-table';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,47 +52,19 @@ export default async function AppHomePage() {
 
       <section className="space-y-3">
         <h2 className="text-body-sm font-semibold tracking-tight text-ink">The ledger</h2>
-        {jobs.length === 0 ? (
-          <div className="ruled-paper rounded-cards border border-hairline px-6 py-10 text-center">
-            <p className="text-body-sm text-ink-soft">Nothing recorded yet.</p>
-            <p className="mt-1 text-body-sm text-slate">
-              Drop a statement above — the first entry takes about a minute.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-cards border border-hairline">
-            <table className="w-full text-body-sm">
-              <thead>
-                <tr className="border-b border-iron bg-ledger text-left text-caption font-semibold uppercase tracking-wide text-slate">
-                  <th scope="col" className="px-4 py-2.5">File</th>
-                  <th scope="col" className="hidden px-4 py-2.5 sm:table-cell">Bank</th>
-                  <th scope="col" className="hidden px-4 py-2.5 text-right sm:table-cell">Rows</th>
-                  <th scope="col" className="px-4 py-2.5">Status</th>
-                  <th scope="col" className="hidden px-4 py-2.5 md:table-cell">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr key={job.id} className="group border-b border-hairline transition-colors last:border-0 hover:bg-ledger">
-                    <td className="px-4 py-2.5">
-                      <Link href={`/app/jobs/${job.id}`} className="font-medium text-ink group-hover:underline">
-                        {job.fileName}
-                      </Link>
-                    </td>
-                    <td className="hidden px-4 py-2.5 text-ink sm:table-cell">{job.statement?.bankName ?? '—'}</td>
-                    <td className="tnum hidden px-4 py-2.5 text-right text-slate sm:table-cell">
-                      {job.statement?.transactions.length ?? '—'}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <StatusChip status={job.status} verified={job.result?.verified ?? null} />
-                    </td>
-                    <td className="tnum hidden px-4 py-2.5 text-slate md:table-cell">{formatTimestamp(job.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <JobsTable
+          jobs={jobs.map(
+            (job): JobRow => ({
+              id: job.id,
+              fileName: job.fileName,
+              status: job.status,
+              bankName: job.statement?.bankName ?? null,
+              txCount: job.statement?.transactions.length ?? null,
+              verified: job.result?.verified ?? null,
+              createdAtLabel: formatTimestamp(job.createdAt),
+            }),
+          )}
+        />
       </section>
     </div>
   );
